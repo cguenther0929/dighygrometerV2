@@ -3,8 +3,8 @@ src/stdbool.h
 src/stdint.h
 src/pic18f66k22.h
 
-DIGHYG_V2.X/funclist
-DIGHYG_V2.X/l.obj
-DIGHYG_V2.X/build
-DIGHYG_V2.X/dist
-DIGHYG_V2.X/nbproject/*
+DIG_HYG_TST.X/funclist
+DIG_HYG_TST.X/l.obj
+DIG_HYG_TST.X/build
+DIG_HYG_TST.X/dist
+DIG_HYG_TST.X/nbproject/*
