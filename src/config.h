@@ -4,71 +4,91 @@
 *   PURPOSE: Configuration file specific to the processor being used and the 
 *           underlying hardware. 
 *
-*   DEVICE: PPIC18F66K22
-*
-*   COMPILER: Microchip XC8 v1.32
-*
-*   IDE: MPLAB X v3.45
-*
 *   TODO:  
 *
 *   NOTE:
 *
 ******************************************************************************/
-#ifndef __CONFIG_H_
-#define __CONFIG_H_
+#ifndef __CONFIG_H
+#define __CONFIG_H
 
-//#include "type.h"       //Needed for defined functions
 #include <stdint.h>
 #include <stdbool.h>
 #include <xc.h>
+#include "main.h"
+#include "struct.h"
+
+/* PREPROCESSOR CALCULATION TO DETERMINE TIMER4'S INCREMENT RATE */
+#define MCU_OSC_FRQ         8000000.0                  // Oscillator used for MCU
+#define OSC_DIV4            (MCU_OSC_FRQ/4.0)          // Oscillator used for MCU
+
+/* REGISTER VALUES FOR 10MS TIME BASE */         
+#define TMR0_INTUP_SETTING  1                                                           // 1 = Caused interrupts, 0 = do not cause interrupts
+#define TMR0_PRESCALER      8                                                           // Options are 1, 2, 4, 8, 16, 32, 128, or 256
+#define TMR0_INC_FREQ       (OSC_DIV4/TMR0_PRESCALER)                                   // Effective rate at which the timer increments
+#define HEART_BEAT_MS       20.0                                                        // Interrupt at this periodicity (mili-seconds)
+#define TMR0_TICKS          ((HEART_BEAT_MS/1000.0)*TMR0_INC_FREQ)                      // How many timer ticks between interrupts
+#define TMR0HIGH            (uint8_t)((65535-TMR0_TICKS)/256)                           // Value to be loaded into the 8-bit register
+#define TMR0LOW             (uint8_t)(TMR0_TICKS-(256*(uint8_t)(TMR0_TICKS/256)))        // Module implementation to obtain register low value
 
 /* DEFINE CODE VERSION NUMBER */
-#define MAJVER              0x00
-#define MINVER              0x00
-#define BUGVER              0x01
+#define MAJVER                  0x00
+#define MINVER                  0x01
+#define BUGVER                  0x00
 
-/* DEFINES FOR STATUS GPIO */
-#define PULSEOUT            LATBbits.LATB5
+/* DEFINITIONS RELATED TO DISPLAY */
+#warning "Display update time shall be >> than display backlight time!"
 
-/* DEFINES FOR POWER CONTROL*/  
-#define DISP_PWR_EN_n       LATEbits.LATE7      //Assert low to enable power to the display
-#define PIEZ_KILL           LATEbits.LATE6      //Assert high to kill stored power keeping power to the MCU.
-#define MCU_PWR_LATCH       LATEbits.LATE5      //Assert high to keep power to the MCU    
+#define MAX_DISP_DWELL                      5               // Max amount of time (in seconds) display is allowed to be ON  <-- TODO remove is no longer needed 
+#define SECONDS_BETWEEN_DISP_UPDATE         10              // Amount of time (in seconds) that will pass between display updates            
+#define SECONDS_DISP_BACKLIGHT_ON           3               // Amount of time (in seconds) that the display backlight will be on once enabled
 
-/* DEFINES FOR LCD PINS*/
-#define DISP_BYTE           LATD                //Port that connects to dispaly
-#define DISP_RS             LATEbits.LATE2      //Register Select signal. RS=0=Command, RS=1=Data
-#define DISP_RW             LATEbits.LATE1      //Read/Write. R/W=1=Read; R/W=0=Write 
-#define DISP_E              LATEbits.LATE0      //Operation enable (falling edge to trigger)
-#define disp_write          0
-#define disp_read           1
-#define disp_command        0
-#define disp_data           1
+/* Processor defines for I2C sensor */
+#define SEL_SENSOR2_BIT                     LATDbits.LATD7
+#define SELECT_SENSOR_1                     0
+#define SELECT_SENSOR_2                     1
 
-/* DEFINE UNUSED PINS */
-#define NC1                 LATAbits.LATA1
+/* PIN DEFINES FOR LCD SCREEN */    //TODO has been updated
+#define DISP_ENABLE                         LATBbits.LATB4          // Active low signal for turning on display
+#define DISP_RESET                          LATCbits.LATC1          // Active low signal to reset the display
+#define DISP_REG_SEL                        LATCbits.LATC0          // Register select signal. 0 = instruction, 1 = data
+#define DISP_SPI_CS                         LATCbits.LATC2          // Display Chip Select Signal 
 
+/* DEFINES FOR LED PINS */  //TODO has been updated
+#define health_led                          LATBbits.LATB5          // For driving health LED  
 
-/* REGISTER VALUES FOR TIME BASE */         
-#define TMR0HIGH            251                 //Defined assuming 500kHz internal oscillator and prescaler of 1 interrupt every 10ms 
-#define TMR0LOW             29                  //Defined assuming 500kHz internal oscillator and prescaler of 1 interrupt every 10ms
+/* DEFINES FOR PUSH BUTTONS */      //TODO has been updated
+#define PB1_GPIO                            PORTBbits.RB0           // Inputs from buttons
+#define PB2_GPIO                            PORTBbits.RB1
+#define BUTTON_PUSHED                       1                       // State of input when button pushed
+#define BUTTON_RELEASED                     !(BUTTON_PUSHED)
+#define BUTTON_DEBOUNCE_TIME                0.140                   // Should be in increments of timer resolution (i.e. 20ms)
+#define BUTTON_DEBOUNCE_TICKS               (uint8_t)(BUTTON_DEBOUNCE_TIME/0.02)
 
-/* I2C ADDDRESSES FOR HUMIDITY SENSOR */
-#define THBaseAddr          0x40            // 7bit address of chip is 0b1000000 -- Full Address is 0b1000000 + R/#W
-#define THConfigReg         0x02            // Address for configuration register
-#define THValuePointer      0x00            // Pointer address when reading temperature / humidity
+/* Defines for state machine */
+#define SENSOR_REFRESH_RATE_SECONDS
+#define COUNTS_20MS_BETWEEN_SENSOR_UPDATE   (uint8_t)(SENSOR_REFRESH_RATE_SECONDS/0.02)
 
-// The following is the configuration register of the part, whose reset value is 0x1000
-                                            // 0b0001 | 0000 | 0000 | 0000 = 0x1000
-#define THConfigVal         0x1000          // [RST(15)][RESERVED(14)][HEAT(13)][MODE(12)] | [BAT STATE(11)][TRES(10)][HRES(9:8)] | RESERVED (7:0)
-
-
-/* DEFINE VARIOUS PIN FUNCITONS */
+/* DEFINE VARIOUS PIN FUNCTIONS */
 #define output              0           //Define the output pin direction setting
 #define input               1
 
-/* BATTERY STATUS DEFINES */
-#define BAT_VOLT_MIN        2.5         //Battery voltage at or below this value will trip the alert message          
+/* INTUITIVE TIMER NAMES */
+#define TIMER1              1
+#define TIMER2              2
+#define TIMER3              3
+#define TIMER4              4
+#define TIMER5              5
+#define TIMER6              6
+#define TIMER7              7
+#define TIMER8              8
+#define TIMER9              9   
+#define TIMER10             10
+
+/* IO MNEMONICS */
+#define LED_ON              0
+#define LED_OFF             1
+#define DISPLAY_OFF         1
+#define DISPLAY_ON          0
 
 #endif

@@ -16,8 +16,8 @@
 *
 ******************************************************************************/
 
-#ifndef __H_ADC_H
-#define __H_ADC_H
+#ifndef __ADC_H
+#define __ADC_H
 
 #include <xc.h>         //Part specific header file
 #include "config.h"     //Project specific header file

@@ -2,6 +2,7 @@
 src/stdbool.h
 src/stdint.h
 src/pic18f66k22.h
+src/.vscode
 
 DIG_HYG_TST.X/funclist
 DIG_HYG_TST.X/l.obj

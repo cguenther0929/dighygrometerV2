@@ -3,20 +3,14 @@
 *
 *   PURPOSE: Main source
 *
-*   DEVICE: PIC18F66K22
+*   TODO:
 *
-*   COMPILER: Microchip XC8 v1.32
-*
-*   IDE: MPLAB X v3.45
-*
-*   TODO:  
-*
-*   NOTE:
+*   NOTE: When reading from timer one in 16bit mode,
+*           we must read from the LOW byte first!
 *
 ******************************************************************************/
 
 #include "main.h" //Include header file associated with main.c
-
 
 // CONFIG1L
 #pragma config RETEN = OFF      // VREG Sleep Enable bit (Disabled - Controlled by SRETEN bit)
@@ -25,8 +19,7 @@
 #pragma config XINST = OFF      // Extended Instruction Set (Disabled)
 
 // CONFIG1H
-#pragma config FOSC = INTIO1    // Oscillator (Internal RC oscillator) with output on OSC2.  p45/550.  default IRCF<2:0> = 110 = 8MHz (on pin 8MHz/4 = 2MHz)
-// #pragma config FOSC = INTIO2    // Oscillator (Internal RC oscillator) with output on OSC2.  p45/550.  default IRCF<2:0> = 110 = 8MHz (on pin 8MHz/4 = 2MHz)
+#pragma config FOSC = INTIO1    // Internal RC Oscillator with output on OSC2.  p45/550.
 #pragma config PLLCFG = OFF     // PLL x4 Enable bit (Disabled)
 #pragma config FCMEN = OFF      // Fail-Safe Clock Monitor (Disabled)
 #pragma config IESO = OFF       // Internal External Oscillator Switch Over Mode (Disabled)
@@ -34,11 +27,11 @@
 // CONFIG2L
 #pragma config PWRTEN = ON      // Power Up Timer (Enabled)
 #pragma config BOREN = SBORDIS  // Brown Out Detect (Enabled in hardware, SBOREN disabled)
-#pragma config BORV = 2         // Brown-out Reset Voltage bits (2.0V)
+#pragma config BORV = 1         // Brown-out Reset Voltage bits (2.7V)
 #pragma config BORPWR = ZPBORMV // BORMV Power level (ZPBORMV instead of BORMV is selected)
 
 // CONFIG2H
-#pragma config WDTEN = OFF       // Watchdog Timer (WDT controlled by SWDTEN bit setting)
+#pragma config WDTEN = OFF      // Watchdog Timer Disabled in HW
 #pragma config WDTPS = 1024     // Watchdog Postscaler (1:1024)
 
 // CONFIG3L
@@ -84,194 +77,385 @@
 #pragma config EBRTB = OFF      // Table Read Protect Boot (Disabled)
 
 struct GlobalInformation gblinfo;
+extern App_State app_state = STATE_IDLE;
+extern Disp_Actions disp_actions = DISP_TMR_DISABLE;
 
 void main()
 {
-    uint16_t i; 
-    for(i=0;i<50000;i++);        //Hardware delay for things to stabilize
-    
-    SetUp();                    //Initialize hardware
+    SetUp();
 
-    /* BEGIN SUPER LOOP */
-    while (true)
-    {
-        DisplayON();
-        UpdateTH();             //Report temp and humidity data
-        ClearDisp();
-        CursorHome();
-        PrintUnsignedDecimal(gblinfo.int_temp_val); 
-        DispSendString("F ");
-        
-        PrintUnsignedDecimal(gblinfo.int_hum_val);
-        DispSendChar('%',false);
-        tick100mDelay(15);
-        
-        BatteryStatus();        //Determine Battery Voltage
-        if(gblinfo.battery_voltage <= 2.6) {
-            ClearDisp(); CursorHome();
-            DispSendString("BV ");  PrintFloat(gblinfo.battery_voltage);
-            tick100mDelay(15);
+    PrintSplashScreen();
+
+    while (true) {
+        if(gblinfo.flag20ms) {
+            gblinfo.flag20ms = false;
+            EvaluateButtonInputs();
+            EvaluateState();
         }
 
-        DisplayOFF();                   //Sleep display for ultra low power draw
-
-        SLEEP();                        //Place device in sleep mode for ultra low power draw -- rising edge on int0 will wake device 
+        if(gblinfo.flag100ms) {
+            gblinfo.flag100ms = false;
+            
+            if(gblinfo.tick1000ms == gblinfo.next_disp_update){
+                gblinfo.next_disp_update    = GetNewDisplayRefreshTime( void );
+                app_state       = UPDATE_DISPLAY;
+            }
+            
+            if(gblinfo.tick1000ms == gblinfo.next_disp_shtdn){
+                DISP_ENABLE = DISPLAY_OFF;
+            }
         
-    }                           //END while(1) SUPER LOOP
-} //END Main()
+        }
 
-void SetUp(void)
-{
-    uint16_t i;
+        if(gblinfo.flag500ms) {
+            gblinfo.flag100ms = false;
+        }
 
-    INTSRC = 0;                             //Set appropriate bits to select the 500kHz internal timer
-    MFIOSEL = 1;
-    IRCF2 = 0; IRCF1 = 1; IRCF0 = 0;
-    
-    for(i=0;i<500;i++);     //Give the clock some time to stabilize
+        if(gblinfo.flag1000ms) {
+            gblinfo.flag1000ms = false;
+            health_led = ~health_led;
+        }
 
-    /* PIN DIRECTION FOR DBG GPIO */
-    TRISB5 = output;        //Port pin attached to the Heartbeat LED
+    }
 
-    /* PIN DIRECTIONS FOR I2C */
-    TRISC3 = input;         //I2C SCK. Must be defined as input
-    TRISC4 = input;         //I2C SDA. Must be defined as input
+}   //END Main()
 
-    /* PIN DIRECTION FOR POWER CONTROL SIGNALS */   
-    DISP_PWR_EN_n = 1;                  //Display off by default 
 
-    /* PIN DIRECTIONS FOR LCD */
-    //Defined in display init function since function that removes power from display sets these to HI-Z each time
-   
-    gblinfo.wakeedge = false;    
-    
-    PORTBINTSetup(1, true, false);         //Turn on INT1, rising_edge = true, high priority = false (has no affect on channel 0, anyhow)
-
-    Init_Interrupts();                  //Set up interrupts  
-    
-    AnalogRefSel(REF2D048, EXTREF); //User internal 2.048V reference and External VREF pin for negative reference -- page 216/380
-    InitA2D(1, 16, 0);              //Set up AD (Justification, Acq Time (TAD), Prescaler) ==> (Right, 16 TAD, RC Oscillator) -- page 361/550
-
-    /* DIGITAL PULSE INITIAL VALUE */
-    PULSEOUT = 0;
-
-    gblinfo.tick10ms = 0;       //Initialize 100s of a tick1000mond counter to 0
-    gblinfo.tick100ms = 0;      //Initialize 100s of a tick1000mond counter to 0
-    gblinfo.tick1000ms = 0;     //Seconds counter
-
-    /* DISABLE ANALOG CHANNELS */
-    ANCON0 = 0x00; //Analog channels 7-0 are configured for digital inputs. p.363     
-    ANCON1 = 0x00; //Analog channel 10-8 are configred for digital inputs. p.364
-    EnableAnalogCh(0);
-
-    /* UNUSED PINS SET TO OUTPUTS FOR POWER CONSUMPTION */
-    TRISA1 = output; LATAbits.LATA1 = 0;             //Putting these lines in play appears to brick operation
-    TRISA3 = output; LATAbits.LATA3 = 0;
-    TRISA4 = output; LATAbits.LATA4 = 0;
-    TRISA5 = output; LATAbits.LATA5 = 0;
-
-    TRISB0 = output; LATBbits.LATB0 = 0;
-    TRISB2 = output; LATBbits.LATB2 = 0;
-    TRISB3 = output; LATBbits.LATB3 = 0;
-    TRISB4 = output; LATBbits.LATB4 = 0;
-
-    TRISC0 = output; LATCbits.LATC0 = 0;
-    TRISC1 = output; LATCbits.LATC1 = 0;
-    TRISC2 = output; LATCbits.LATC2 = 0;
-    TRISC5 = output; LATCbits.LATC5 = 0;
-    TRISC6 = output; LATCbits.LATC6 = 0;
-    TRISC7 = output; LATCbits.LATC7 = 0;
-
-    TRISG0 = output; LATGbits.LATG0 = 0;
-    TRISG1 = output; LATGbits.LATG1 = 0;
-    TRISG2 = output; LATGbits.LATG2 = 0;
-    TRISG3 = output; LATGbits.LATG3 = 0;
-    TRISG4 = output; LATGbits.LATG4 = 0;
-
-    TRISF1 = output; LATFbits.LATF1 = 0;
-    TRISF2 = output; LATFbits.LATF2 = 0;
-    TRISF3 = output; LATFbits.LATF3 = 0;
-    TRISF4 = output; LATFbits.LATF4 = 0;
-    TRISF5 = output; LATFbits.LATF5 = 0;
-    TRISF6 = output; LATFbits.LATF6 = 0;
-    TRISF7 = output; LATFbits.LATF7 = 0;
-
-    TRISE3 = output; LATEbits.LATE3 = 0;
-    TRISE4 = output; LATEbits.LATE4 = 0;
-    TRISE5 = output; LATEbits.LATE5 = 0;
-    TRISE6 = output; LATEbits.LATE6 = 0;
-
-    Timer0Init(1, 1, 0); //ARGS: interrupts = yes, prescaler = 1, clksource = FOSC/4 (8MHz / 4 in this application)
-    Timer0On();
-    
-    /* I2C START UP*/   
-    I2Cinit();
-    tick100mDelay(2);
-
-    /* TEMP/HUMIDITY SENSOR CONFIG*/   
-    I2CWrite_16(THBaseAddr, THConfigReg, THConfigVal);  //See config.h to understand THConfigVal
-    tick100mDelay(1);
-
-}
-
-void UpdateTH(void) {
-    uint32_t SensorData;
-    uint16_t TemperatureInt;
-    uint16_t HumIntVal;
-    float TempFloatVal;
-    float HumFloatVal;
-    uint8_t I2CData;
-
-    I2CWrite_SetPointer(THBaseAddr,THValuePointer);
-    tick10msDelay(10);                                           //Per page 5/30 of the HDC1080 datasheet, conversion time for 14bits is 6.5ms
-    SensorData = I2CRead(THBaseAddr);                           //Reads MSB Temp | LSB Temp | MSB Hum | LSB Hum
-    
-    TemperatureInt = (uint16_t)((SensorData >> 16) & 0xFFFF);
-    // TemperatureInt = (uint16_t)((SensorData >> 18) & 0x3FFF);           //Need 14 bits of temperature data
-    HumIntVal = (uint16_t)(SensorData & 0xFFFF);
-    // HumIntVal = (uint16_t)((SensorData >> 2) & 0x3FFF);                 //Grab 14 bits of humidity data
-
-    TempFloatVal = (float)((TemperatureInt/397.187878) - 40);       //Per HDC1080 datasheet page 14 of 30 -- Temperature value in C!
-    TempFloatVal = (float)(((TempFloatVal*(1.8)) + 32));       //Per HDC1080 datasheet page 14 of 30 -- Temperature value in C!
-    gblinfo.int_temp_val = (uint8_t)(TempFloatVal);
-
-    // HumFloatVal = (float)(HumIntVal*0.00153);                      //Per HDC1080 datasheet page 14/30.  Value in %RH
-    HumFloatVal = (float)(HumIntVal/655.36);                      //Per HDC1080 datasheet page 14/30.  Value in %RH
-    gblinfo.int_hum_val = (uint8_t)(HumFloatVal);
-}
-
-void BatteryStatus( void ) {
-    uint16_t adcreading = 0;
-    float Tempval = 0;
-    
-    adcreading = ReadA2D(0,1);                          //Battery analog sense is on channel AN0
-    Tempval = (float)(adcreading*(0.000816456)); 		//Convert bits to volts. Internal Reference is 2.048 
-    
-    gblinfo.battery_voltage = Tempval;
-    (Tempval <= BAT_VOLT_MIN) ? (gblinfo.bat_low = true):(gblinfo.bat_low = false);
-
-}
-
-void tick100mDelay(uint16_t ticks)
+void tick100msDelay(uint16_t ticks)
 {
     uint16_t i = 0;
     uint16_t tick = 0; //Used to lock time value
     for (i = ticks; i > 0; i--)
     {
         tick = gblinfo.tick100ms;
-        while (tick == gblinfo.tick100ms)
-            ; //Wait for time to wrap around (in one half tick1000mond)
+        while (tick == gblinfo.tick100ms); //Wait for time to wrap around (in one half tick1000mond)
     }
 }
 
-void tick10msDelay(uint16_t ticks)
+void tick20msDelay(uint16_t ticks)
 {
     uint16_t i = 0;
     uint16_t tick = 0; //Used to lock time value
     for (i = ticks; i > 0; i--)
     {
-        tick = gblinfo.tick10ms;
-        while (tick == gblinfo.tick10ms); //Wait for time to wrap around (in one half tick1000mond)
+        tick = gblinfo.tick20ms;
+        while (tick == gblinfo.tick20ms); //Wait for time to wrap around (in one half tick1000mond)
     }
+}
+
+
+void PrintSplashScreen( void ) {
+
+    DispSetContrast(60);
+    DispWtLnOne("Digital");
+    DispWtLnTwo("Hygrometer");
+    tick100msDelay(15);
+
+
+    DispRefresh();
+    DispWtLnOne("FW VERSION:");
+    DispLineTwo();
+    DispWriteChar(MAJVER + 0x30); DispWriteChar('.');
+    DispWriteChar(MINVER + 0x30); DispWriteChar('.');
+    DispWriteChar(BUGVER + 0x30);
+    tick100msDelay(10);
+
+    DispRefresh();
+
+}
+
+void EvaluateState( void ) {
+    uint16_t temp_data;
+
+    switch(app_state) {
+        case STATE_IDLE:
+
+            if(gblinfo.tick20msloopctr >= COUNTS_20MS_BETWEEN_SENSOR_UPDATE)
+                app_state = STATE_GRAB_SENSOR_DATA;
+            else
+                gblinfo.tick20msloopctr++;
+             
+            if(gblinfo.up_btn_pressed) {
+                gblinfo.up_btn_pressed = false;
+                app_state = STATE_CALIBRATE;
+            }
+
+            if(gblinfo.lo_btn_pressed) {
+                gblinfo.lo_btn_pressed = false;
+                app_state = STATE_CLEAR_CALIBRATE;
+            }
+
+            if(gblinfo.both_btns_pressed) {
+                gblinfo.both_btns_pressed = false;
+            }
+
+        break;
+        
+        case STATE_GRAB_SENSOR_DATA:
+        
+            SelectSensor(SELECT_SENSOR_1);
+            tick20msDelay(1);
+            temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_HUM_HOLD_MASTER);
+            gblinfo.rh_value_1 = (float)((125.0 * temp_data / 65536) - 6 + gblinfo.rh_offset_1);
+
+            temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_TMP_PREV_RH_MEAS);
+            gblinfo.temp_value_1 = (uint8_t)((temp_data / 207.1952) - 52.24);             // Units in deg C
+
+            SelectSensor(SELECT_SENSOR_2);
+            tick20msDelay(1);
+            temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_HUM_HOLD_MASTER);
+            gblinfo.rh_value_2 = (float)((125.0 * temp_data / 65536) - 6 + gblinfo.rh_offset_2);
+
+            temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_TMP_PREV_RH_MEAS);
+            gblinfo.temp_value_2 = (uint8_t)((temp_data / 207.1952) - 52.24);             // Units in deg C
+        
+        break;
+
+        case UPDATE_DISPLAY:
+            DISP_ENABLE = DISPLAY_ON;
+            gblinfo.next_disp_shtdn     = GetNewDisplayShtdnTime( void );
+            
+            DispRefresh();      // Puts cursor on line one, too
+            DispWriteString("T1:"); PrintDecimalNumber((uint16_t) gblinfo.temp_value_1); DispWriteString("  ");
+            DispWriteString("H1:"); PrintDecimalNumber(((uint16_t) gblinfo.rh_value_1);
+            
+            DispLineTwo();
+            DispWriteString("T2:"); PrintDecimalNumber((uint16_t) gblinfo.temp_value_2); DispWriteString("  ");
+            DispWriteString("H2:"); PrintDecimalNumber(((uint16_t) gblinfo.rh_value_2);
+
+            app_state = STATE_IDLE;
+        break;
+
+        case STATE_CALIBRATE:
+
+            SelectSensor(SELECT_SENSOR_1);
+            tick20msDelay(1);
+            temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_HUM_HOLD_MASTER);
+            gblinfo.rh_offset_1 = (float)(75 - ((125.0 * temp_data / 65536) - 6));
+
+            SelectSensor(SELECT_SENSOR_2);
+            tick20msDelay(1);
+            temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_HUM_HOLD_MASTER);
+            gblinfo.rh_offset_2 = (float)(75.0 - ((125.0 * temp_data / 65536) - 6));
+
+
+            app_state = STATE_IDLE;
+            break;
+
+        case STATE_CLEAR_CALIBRATE:
+            gblinfo.rh_offset_1 = 0;
+            gblinfo.rh_offset_2 = 0;
+
+            app_state = STATE_IDLE;
+            break;
+
+        default:
+            DispRefresh();
+            DispWtLnOne("STATE ERROR");
+            break;
+    }
+
+}
+
+// void DisplayDwellTmr( uint8_t action ) {
+
+//     switch (action) {
+//         case DISP_TMR_RST:
+//             gblinfo.disp_tmr_active = true;
+//             gblinfo.disp_seconds_ctr = 0;
+//             DISP_ENABLE = DISPLAY_ON;
+
+//             break;
+
+//         case DISP_TMR_CNT:
+
+//             if(gblinfo.disp_tmr_active && (gblinfo.disp_seconds_ctr < MAX_DISP_DWELL))
+//                 gblinfo.disp_seconds_ctr++;
+//             else if (!gblinfo.disp_tmr_active)
+//                 gblinfo.disp_seconds_ctr = 0;
+
+//             break;
+
+//         case DISP_TMR_ENABLE:
+//             gblinfo.disp_tmr_active = true;
+//             gblinfo.disp_seconds_ctr = 0;
+//             break;
+
+//         case DISP_TMR_DISABLE:
+//             gblinfo.disp_tmr_active = true;
+//             gblinfo.disp_seconds_ctr = 0;
+//             break;
+//     }
+
+// }
+
+void EvaluateButtonInputs ( void ) {
+    if(PB1_GPIO == BUTTON_PUSHED && PB2_GPIO == BUTTON_PUSHED) {
+        (gblinfo.up_btn_press_ctr > 2)?(gblinfo.up_btn_press_ctr -= 2):(gblinfo.up_btn_press_ctr = 0);
+        (gblinfo.lo_btn_press_ctr > 2)?(gblinfo.lo_btn_press_ctr -= 2):(gblinfo.lo_btn_press_ctr = 0);
+
+        gblinfo.btn_both_press_ctr++;
+    }
+    else if(PB1_GPIO == BUTTON_PUSHED && PB2_GPIO == BUTTON_RELEASED) {
+        (gblinfo.lo_btn_press_ctr > 2)?(gblinfo.lo_btn_press_ctr -= 2):(gblinfo.lo_btn_press_ctr = 0);
+        (gblinfo.btn_both_press_ctr > 2)?(gblinfo.btn_both_press_ctr -= 2):(gblinfo.btn_both_press_ctr = 0);
+
+        gblinfo.up_btn_press_ctr++;
+    }
+    else if(PB1_GPIO == BUTTON_RELEASED && PB2_GPIO == BUTTON_PUSHED) {
+        (gblinfo.up_btn_press_ctr > 2)?(gblinfo.up_btn_press_ctr -= 2):(gblinfo.up_btn_press_ctr = 0);
+        (gblinfo.btn_both_press_ctr > 2)?(gblinfo.btn_both_press_ctr -= 2):(gblinfo.btn_both_press_ctr = 0);
+
+        gblinfo.lo_btn_press_ctr++;
+    }
+    else {
+        (gblinfo.up_btn_press_ctr > 2)?(gblinfo.up_btn_press_ctr -= 2):(gblinfo.up_btn_press_ctr = 0);
+        (gblinfo.lo_btn_press_ctr > 2)?(gblinfo.lo_btn_press_ctr -= 2):(gblinfo.lo_btn_press_ctr = 0);
+        (gblinfo.btn_both_press_ctr > 2)?(gblinfo.btn_both_press_ctr -= 2):(gblinfo.btn_both_press_ctr = 0);
+
+    }
+
+    if(gblinfo.up_btn_press_ctr >= BUTTON_DEBOUNCE_TICKS) {
+
+        gblinfo.up_btn_press_ctr = 0;
+        gblinfo.up_btn_pressed       = true;
+        gblinfo.lo_btn_pressed       = false;
+        gblinfo.both_btns_pressed    = false;
+    }
+
+    else if(gblinfo.lo_btn_press_ctr >= BUTTON_DEBOUNCE_TICKS) {
+
+        gblinfo.lo_btn_press_ctr = 0;
+        gblinfo.lo_btn_pressed       = true;
+        gblinfo.up_btn_pressed       = false;
+        gblinfo.both_btns_pressed    = false;
+    }
+
+    else if(gblinfo.btn_both_press_ctr >= BUTTON_DEBOUNCE_TICKS) {
+
+        gblinfo.btn_both_press_ctr = 0;
+        gblinfo.both_btns_pressed    = true;
+        gblinfo.up_btn_pressed       = false;
+        gblinfo.lo_btn_pressed       = false;
+    }
+
+}
+
+void SetUp(void)
+{
+    app_state = STATE_IDLE;
+
+    /* PIN DIRECTION FOR LEDs */
+    TRISB5 = output;                    // Output for system health LED.
+
+    /* PIN DIRECTION FOR PUSH BUTTONS */
+    TRISB0 = input;                     // Push Button 1 input
+    TRISB1 = input;                     // Push Button 2 input
+
+    /* PIN DIRECTION FOR DISPLAY AND EXTERNAL SPI */
+    TRISB4 = output;                    // Active low output enables display
+    TRISC0 = output;                    // Register select ling to Display
+    TRISC1 = output;                    // Display reset signal
+    TRISC2 = output;                    // Display SPI chip select signal
+    TRISC3 = output;                    // Display SPI SCK signal
+    TRISC4 = input;                     // Display SPI MISO signal
+    TRISC5 = output;                    // Display SPI MOSI signal
+    TRISF1 = output;                    // External device CS signal
+
+    /* GPIO SIGNALS TO HEADER */
+    TRISE7 = output;                    // Port tied to GPIO 1
+    TRISE6 = output;                    // Port tied to GPIO 2
+    TRISE5 = output;                    // Port tied to GPIO 3
+    TRISE4 = output;                    // Port tied to GPIO 4
+    TRISE3 = output;                    // Port tied to GPIO 5
+    TRISE2 = output;                    // Port tied to GPIO 6
+
+    /* PIN DIRECTIONS FOR TEMP/HUMIDITY SENSOR */
+    TRISD5 = input;                     // I2C SDA2 line -- must be defined as input
+    TRISD6 = input;                     // I2C SCL2 line -- must be defined as input
+    TRISD7 = output;                    // Output that drive analog switch for selecting between sensor 1 and 2
+
+    /* PIN DIRECTIONS FOR WIFI MODULE */
+    TRISA0 = output;                    // Enable line to WiFi module
+    TRISA1 = output;                    // Reset line to WiFi module
+    TRISC6 = output;                    // Serial transmit line to WiFi module
+    TRISC7 = input;                     // Serial receive line from WiFi module
+
+    /* UNUSED PINS DEFINED AS OUTPUTS TO SAVE POWER */  //TODO update this list
+    TRISA7 = output;
+    TRISA3 = output;
+    TRISA4 = output;
+    TRISA5 = output;
+
+    TRISB2 = output;
+    TRISB3 = output;
+
+    TRISG4 = output;
+    TRISG3 = output;
+    TRISG2 = output;
+    TRISG1 = output;
+    TRISG0 = output;
+
+    TRISF7 = output;
+    TRISF6 = output;
+    TRISF5 = output;
+    TRISF4 = output;
+    TRISF3 = output;
+    TRISF2 = output;
+
+    TRISE1 = output;
+    TRISE0 = output;
+
+    TRISD4 = output;
+    TRISD3 = output;
+    TRISD2 = output;
+    TRISD1 = output;
+    TRISD0 = output;
+
+    /* BUTTON INITIALIZATION */
+    gblinfo.lo_btn_press_ctr            = 0;
+    gblinfo.up_btn_press_ctr            = 0;
+    gblinfo.lo_btn_press_ctr            = 0;
+    gblinfo.btn_both_press_ctr          = 0;
+    gblinfo.up_btn_pressed              = false;
+    gblinfo.lo_btn_pressed              = false;
+    gblinfo.both_btns_pressed           = false;
+
+    /* Sensor Initialization */
+    gblinfo.rh_value_1                  = 0;
+    gblinfo.rh_offset_1                 = 0;
+    gblinfo.temp_value_1                = 0;
+    gblinfo.rh_value_2                  = 0;
+    gblinfo.rh_offset_2                 = 0;
+    gblinfo.temp_value_2                = 0;
+
+    /* INITIAL CONDITION OF HEALTH LED */
+    health_led = LED_OFF;
+
+    /* TURN OFF THE DISPLAY */
+    DISP_ENABLE = DISPLAY_OFF;
+
+    /* SETUP INTERRUPTS */
+    Init_Interrupts();
+
+    /* INITIALIZE SPI INTERFACE FOR DISPLAY */
+    SPI1Init();
+
+    AnalogRefSel(REF2D048, EXTREF);             // Use internal 2.048V reference and External VREF pin for negative reference -- page 216/380
+    InitA2D(RIGHT_JUSTIFIED, 4);                // Set up AD (Justification, Acq Time TADs) ==> (Right, 4 TAD) -- page 361/550
+
+    /* SETUP ANALOG CHANNELS */
+    ANCON0 = 0x00;                      // Analog channels 7-0 are configured for digital inputs. p.363
+    ANCON1 = 0x00;                      // Analog channel 10-8 are configred for digital inputs. p.364
+
+    gblinfo.tick20ms = 0;
+    gblinfo.tick100ms = 0;
+    gblinfo.tick500ms = 0;
+    gblinfo.tick1000ms = 0;
+
+    /* TIMER FOR APPLICATION INTERRUPTS */
+    Timer0Init(TMR0_INTUP_SETTING, TMR0_PRESCALER, TMR0_FSOC_DIV_BY_4); //ARGS: interrupts, prescaler, clksource = FOSC/4
+    Timer0On();
+
 }
 /* END OF FILE */

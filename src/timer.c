@@ -3,12 +3,6 @@
 *
 *   PURPOSE: Source file containing all timer-related routines.  
 *
-*   DEVICE: PIC18F66K22
-*
-*   COMPILER: Microchip XC8 v1.32
-*
-*   IDE: MPLAB X v3.45
-*
 *   TODO:  
 *
 *   NOTE:
@@ -21,17 +15,17 @@
 struct GlobalInformation gblinfo;
 
 void Timer0On( void ){
-    #ifndef TMR0HIGH                    //Assume TMR0LOW is also not defined
-        TMR0H = 248;                   //Load the high register for the timer (16MHz and prescaler of 64)
-        TMR0L = 47;                   	//Load the low register for the timer   (16MHz and prescaler of 64)
-    #else
-        TMR0H = TMR0HIGH;                   	//Load the high register for the timer (16MHz and prescaler of 64)
-        TMR0L = TMR0LOW;                   	//Load the low register for the timer   (16MHz and prescaler of 64)
-    #endif
+    // #ifndef TMR0HIGH                    //Assume TMR0LOW is also not defined
+    //     TMR0H = 254;                   //Load the high register for the timer (16MHz and prescaler of 64)
+    //     TMR0L = 191;                   	//Load the low register for the timer   (16MHz and prescaler of 64)
+    // #else
+    TMR0H = TMR0HIGH;                   	//Load the high register for the timer (16MHz and prescaler of 64)
+    TMR0L = TMR0LOW;                   	//Load the low register for the timer   (16MHz and prescaler of 64)
+    // #endif
     TMR0ON = 1;                 	//Set the bit to turn on the timer
 }
 
-void Timer0Init(uint8_t interrupts, uint8_t prescaler, uint8_t clksource ) {
+void Timer0Init(uint8_t interrupts, uint16_t prescaler, uint8_t clksource ) {
     T0CONbits.T08BIT = 0;             //We want this timer to run in 16bit mode.
     
     switch(interrupts){
@@ -90,10 +84,10 @@ void Timer0Init(uint8_t interrupts, uint8_t prescaler, uint8_t clksource ) {
     }
     
     switch(clksource){
-        case 0:             //Use the internal instruction clock (FOSC/4)
+        case TMR0_FSOC_DIV_BY_4:             //Use the internal instruction clock (FOSC/4)
             T0CONbits.T0CS = 0;
             break;
-        case 1:         //use external clock on T0CKI pin
+        case TMR0_PIN_T0CKI:         //use external clock on T0CKI pin
             T0CONbits.T0CS = 1;
             T0CONbits.T0SE = 1;               //Increment timer on low to high input (when clock source is T0CKI) 
             break;
@@ -103,7 +97,7 @@ void Timer0Init(uint8_t interrupts, uint8_t prescaler, uint8_t clksource ) {
     }
 }
 
-void Timer1Init( bool interrupts, uint8_t prescaler, bool clksource ) {
+void Timer1Init( uint8_t interrupts, uint8_t prescaler, uint8_t clksource ) {
     
     T1CONbits.RD16 = 1;               //Allow 16 bits to be written to the timer register at at once.  
     switch(interrupts){
@@ -162,9 +156,9 @@ void Timer1Init( bool interrupts, uint8_t prescaler, bool clksource ) {
 }
 
 void Timer1On(uint8_t RegHigh, uint8_t RegLow){
-    TMR1H = RegHigh;                   //Load the low register for the timer
-    TMR1L = RegLow;                   //Load the high register for the timer
-    T1CONbits.TMR1ON = 1;                     //Set the bit to turn on the timer
+    TMR1H = RegHigh;                    // Load the low register for the timer
+    TMR1L = RegLow;                     // Load the high register for the timer
+    T1CONbits.TMR1ON = 1;               // Set the bit to turn on the timer
 }
 
 void Timer1Off( void ){
@@ -180,7 +174,7 @@ void Timer2Off( void ){
     TMR2ON = 0;                 	//Set the bit to turn on the timer
 }
 
-void Timer2Init( bool interrupts, uint8_t prescaler, uint8_t postscaler) {
+void Timer2Init( uint8_t interrupts, uint8_t prescaler, uint8_t postscaler) {  
     switch(interrupts){
         case 0:
             TMR2IE = 0;     //Do not cause an interrupt
@@ -216,9 +210,14 @@ void Timer2Init( bool interrupts, uint8_t prescaler, uint8_t postscaler) {
 
 }
 
-void Timer3Init( bool interrupts, uint8_t prescaler, bool clksource ) {
+void Timer3Init(uint8_t interrupts, uint8_t prescaler, uint8_t clksource ) {
+
+    /* Some additional notes on this timer.  TXSYNC bit/functions are not supported here.  If such 
+    features are desired, or this timer/counter operates from a source other than fosc/4, then code
+    will need to be put in place for support.  By default RD16=0, which means the 16 bit read/write 
+    operations are performed in two separate 8 bit operations */
     
-    T3CONbits.RD16 = 1;               //Allow 16 bits to be written to the timer register at at once.  
+    T3CONbits.RD16 = 1;     //Allow 16 bits to be written to the timer register at at once.  
     switch(interrupts){
         case 0:
             TMR3IE = 0;     //Do not cause an interrupt
@@ -284,7 +283,7 @@ void Timer3Off( void ){
     TMR3ON = 0;                     //Turn the timer off
 }
 
-void Timer4Init(  bool interrupts, uint8_t prescaler, uint8_t postscaler ) {
+void Timer4Init(  uint8_t interrupts, uint8_t prescaler, uint8_t postscaler ) {
 	    switch(interrupts){
         case 0:
             TMR4IE = 0;     //Do not cause an interrupt
@@ -320,8 +319,9 @@ void Timer4Init(  bool interrupts, uint8_t prescaler, uint8_t postscaler ) {
 }
 
 void Timer4On( uint8_t period ){
-    PR4 = period;						//Define the period for the timer.  
-    TMR4ON = 1;                 	//Set the bit to turn on the timer
+    PR4 = period;					// Define the period for the timer.  
+    TMR4 = 0;                       // Clear the counter's register
+    TMR4ON = 1;                 	// Set the bit to turn on the timer
 }
 
 void Timer4Off( void ){

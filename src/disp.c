@@ -1,70 +1,187 @@
 /******************************************************************************
-*   FILE: dispdriver.c
-*
-*   PURPOSE: Driver file for 8 bit displays.  Originally written for a 
-*           Newhaven display
-*
-*   DEVICE: PIC18F66K22
-*
-*   COMPILER: Microchip XC8 v1.32
-*
-*   IDE: MPLAB X v3.45
-*
-*   TODO:  
-*
-*   NOTE:
-*
+ *	FILE: disp.c
+ *
+ *	PURPOSE: Contains helper functions for communication with the 
+ *          display.  Taret device: PIC18F66K22, advanced 8 bit MCU.
+ *
+ *	AUTHOR: Clinton Guenther
+ *
+ *	TODO:	      
+ *
 ******************************************************************************/
-#include "dispdriver.h"
 
-void DispTrigger(void) {
-    uint16_t i;
-    DISP_E = 0;
-    // tick10msDelay(1);
-    for(i=0;i<500;i++);     //Temp, replace with delay function
-    DISP_E = 1;
+// #include "spi.h"		//Include the header file for this module
+#include "disp.h"
+
+void DispInit ( void ) {
+    uint8_t i;
+    
+    DISP_REG_SEL = 0;
+    DISP_ENABLE = DISPLAY_ON;
+    tick100msDelay(1);
+    
+    DISP_RESET = 0;
+    tick100msDelay(1);
+    DISP_RESET = 1;
+    tick100msDelay(1);
+
+
+    DispSPI1Write(0x30);            // Send a few wakeup commands (taken from example in datasheet)
+    for (i=0;i<20;i++);
+    
+    DispSPI1Write(0x30);
+    for (i=0;i<20;i++);
+    
+    DispSPI1Write(0x30);
+    for (i=0;i<20;i++);
+    
+    DispSPI1Write(0x39);        // Function set
+    for (i=0;i<20;i++);
+
+    DispSPI1Write(0x14);        // Internal oscillator frequency
+    for (i=0;i<20;i++);
+    
+    DispSPI1Write(0x56);        // power control -- taken directly from datasheet -- seems to work as-is
+    for (i=0;i<20;i++);
+    
+    DispSPI1Write(0x6D);        // follower control -- -- taken directly from datasheet -- seems to work as-is
+    for (i=0;i<20;i++);
+    
+    DispSPI1Write(0x70);        // Contrast set.  The lower the second nibble, the harder to see. (i.e. 0x7A will have brighter contrast)
+    for (i=0;i<20;i++);
+    
+    DispSPI1Write(0x0C);        // Entire display ON
+    for (i=0;i<20;i++);
+    
+    DispSPI1Write(0x06);        // Disp entry mode 
+    for (i=0;i<20;i++);
+
+    DispClear();
+    
+    DispCursorHome();
+
 }
 
-void DispSendChar(uint8_t bytein, bool command) {
-    (command==true)?(DISP_RS = disp_command):(DISP_RS = disp_data);
-    DISP_BYTE = bytein;
-    DISP_RW = disp_write;
-    DispTrigger();
+void DispSetContrast(uint8_t percentage) {
+    uint8_t i;
+    uint8_t contrast_value; 
+    float flt_contrast_value; 
+
+    DISP_ENABLE = DISPLAY_ON;
+
+    DISP_REG_SEL = 0;
+    for (i=0;i<20;i++);
+
+    flt_contrast_value = (float)(percentage*0.16);
+
+    contrast_value = (uint8_t)(flt_contrast_value);
+
+    if(contrast_value > 15) 
+        (contrast_value = 15);
+
+    contrast_value = (uint8_t)(0x70 | contrast_value);
+    
+    DispSPI1Write(contrast_value);
+
 }
 
-void DispSendString(const char * y) {
-    while(*y != '\0'){
-        DispSendChar(*y,false);
-        y++;
+void DispRefresh( void ) {
+    DispClear();
+    DispCursorHome();
+}
+
+void DispClear( void ) {
+    DISP_REG_SEL = 0;
+    DispSPI1Write(0x01);
+}
+
+void DispCursorHome( void ) {  
+    DISP_REG_SEL = 0;
+    DispSPI1Write(0x02);
+}
+
+void DispLineOne (void ) {
+    DISP_REG_SEL = 0;
+    DispSPI1Write(0x80);        // Data format D[7:0] = 0b 1 A6 A5 A4 A3 A2 A1 A0.  For 0x00 = 0b 1000 0000 0x80
+}
+
+void DispLineTwo (void ) {
+    DISP_REG_SEL = 0;
+    DispSPI1Write(0xA8);        // Data format D[7:0] = 0b 1 A6 A5 A4 A3 A2 A1 A0.  For 0x40 = 0b 1010 1000 0xA8
+}
+
+
+void DispWriteChar (uint8_t c) {
+    uint8_t i;
+    
+    DISP_REG_SEL = 1;
+    for (i=0;i<50;i++);
+    DispSPI1Write(c);
+
+    DISP_REG_SEL = 0;
+    
+}
+
+void DispWtLnOne ( char * y ) {
+    uint8_t char_ctr = 0;
+    DispLineOne();
+
+    while(*y != '\0' && char_ctr < 16){
+        DispWriteChar(*y);
+        y++;                           //Increment the pointer memory address
+        char_ctr++;
     }
+
+    while(char_ctr < 16){
+        DispWriteChar(' ');
+        char_ctr++;
+    }
+
 }
 
-void CursorHome(void) {
-    DispSendChar(0x02,true);
+void DispWtLnTwo ( char * y ) {
+    uint8_t char_ctr = 0;
+    DispLineTwo();
+
+    while(*y != '\0' && char_ctr < 16){       
+        DispWriteChar(*y);
+        y++;                           //Increment the pointer memory address
+        char_ctr++;
+    }
+
+    while(char_ctr < 16){
+        DispWriteChar(' ');
+        char_ctr++;
+    }
+
 }
 
-void ClearDisp(void) {
-    DispSendChar(0x01,true);
+void DispWriteString(char * y) {
+
+    while(*y != '\0'){
+        DispWriteChar(*y);
+        y++;                           //Increment the pointer memory address
+    }
+
 }
 
-void PrintUnsignedDecimal (uint8_t number) {
-    char temphex[3];            //8 bit number so max of 255 (i.e. three digits)
-    uint8_t i;                  //Use this as a counter
-    uint8_t decimal_count;      //Number of digits as determined by sprintf
+void PrintDecimalNumber (uint16_t number) {
+    char temphex[5];        //Define the array that will hold the ASCII values
+    uint8_t i;                //Use this as a counter
+    uint8_t decimal_count;    //This is how many digits are written
 
     /* USE SPRINT F TO BUILD THE ARRAY OF ASCII CHARACTERS */
     decimal_count = sprintf(temphex, "%u", number); //u tells the function we want an unsigned decimal number
 
-    /* PLACE EACH OF THE DIGITS ON THE DISPLAY */
-    for(i = 0; i < decimal_count; i++) {    //Place the arry of ASCII characters on the display
-        DispSendChar(temphex[i],false);
+    for(i = 0; i < decimal_count; i++) {    //Print out the array of ASCII characters.
+        DispWriteChar(temphex[i]);
     }
 
 }
 
-void PrintFloat (float number) {
-    char temphex[8];                //Define the array that will hold the ASCII values
-    uint8_t i;                      //Use this as a counter
+void DispWriteFloat (float number) {
+    char temphex[8];        //Define the array that will hold the ASCII values
+    uint8_t i;                //Use this as a counter
     uint16_t j;
     uint8_t decimal_count; //This is how many digits are written
 
@@ -72,50 +189,44 @@ void PrintFloat (float number) {
     decimal_count = sprintf(temphex, "%.4f", number);   //f tells the function we want to print a float value
 
     for(i = 0; i < decimal_count; i++) {    //Print out the array of ASCII characters.
-        DispSendChar(temphex[i],false);
+        DispWriteChar(temphex[i]);
     }
 }
 
-void DisplayON( void ){
-    TRISE7 = output;        //Active low signal to enable display power
-    DISP_PWR_EN_n = 0;      //Turn the display on
-    DisplayInit();
+void DispWrite8b (uint8_t number) {
+    uint16_t temp;      //Use for temporary value
+    uint8_t i;         //Counter value
+    for(i = 8; i > 0 ; i--) {
+        temp = number >> (i - 1);
+        temp = temp & 0x01;
+        temp = temp + 0x30;         //Turn this into an ASCII value
+        DispWriteChar(temp);
+    }
 }
 
-void DisplayOFF( void ){
-     
-    /* TURN THESE TO HI-Z */
-    TRISD  = 0xFF;          //The entire port shall be an output  
-    
-    TRISE0 = input;         //The entire port can be an output
-    TRISE1 = input;         //The entire port can be an output
-    TRISE2 = input;         //The entire port can be an output
+void GetNewDisplayRefreshTime ( void ) {
+    if((gblinfo.tick1000ms + SECONDS_BETWEEN_DISP_UPDATE) > 59) {
+        gblinfo.next_disp_update = (gblinfo.tick1000ms + SECONDS_BETWEEN_DISP_UPDATE) - 59;             // Case where timer needs to roll over
+    }
 
-    DISP_PWR_EN_n = 1;      //Remove power from display
-    TRISE7 = input;        //Make Hi-Z -- pull up resistor will take care of things from here.  
+    else {
+        gblinfo.next_disp_update = (gblinfo.tick1000ms + SECONDS_BETWEEN_DISP_UPDATE);
+        if(gblinfo.next_disp_update > 59) gblinfo.next_disp_update = SECONDS_BETWEEN_DISP_UPDATE;       // Cath possible concurrency issue here
+
+    }
 }
 
-void DisplayInit(void) {
+void GetNewDisplayShtdnTime( void ) {
+    if((gblinfo.tick1000ms + SECONDS_DISP_BACKLIGHT_ON)) {
+        gblinfo.next_disp_update = (gblinfo.tick1000ms + SECONDS_DISP_BACKLIGHT_ON) - 59;             // Case where timer needs to roll over
+    }
 
-    /* PIN DIRECTIONS FOR LCD */
-    TRISD = output; //The entire port shall be an output 
-    TRISE = output; //The entire port can be an output.
-    tick10msDelay(1);
-    
-    DispSendChar(0x30,true);            //Send command 0x30 = Wake up
-    tick10msDelay(1);                     //must wait 5ms, busy flag not available
-    
-    DispSendChar(0x30,true);            //Send command 0x30 = Wake up #2
-    tick10msDelay(1);             
-    
-    DispSendChar(0x30,true);            //Send command 0x30 = Wake up #3
-    tick10msDelay(1); 
+    else {
+        gblinfo.next_disp_update = (gblinfo.tick1000ms + SECONDS_DISP_BACKLIGHT_ON);
+        if(gblinfo.next_disp_update > 59) gblinfo.next_disp_update = SECONDS_DISP_BACKLIGHT_ON;       // Cath possible concurrency issue here
 
-    DispSendChar(0x30,true);        //Function set: [0,0,1,DL] [N,F,0,0] :  DL = 1|0 = 8 | 4 bit interface ; N = 1|0 = 2 | 1 Lines ; F = 5x11 | 5x8 Font
-    
-    DispSendChar(0x10,true);        //Set cursor : [0,0,0,1] [S/C,R/L,0,0] : S/C = 1|0 = ? : R/L = 1|0 = ? 
-    
-    DispSendChar(0x0C,true);        //Display ON/OFF Ctrl : [0,0,0,0] [1,D,C,B] : D=1|0=Disp ON | Disp OFF : C=1|0=Cursor ON|OFF : B=1|0= Blink ON|OFF : 0b0000 1100
-    
-    DispSendChar(0x06,true);        //Entry mode set : [0,0,0,0][0,1,I/D,SH] : I/D=1|0=? : SH=1|0=?
+    }
+
 }
+
+/* END OF FILE */

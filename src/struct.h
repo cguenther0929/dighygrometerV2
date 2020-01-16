@@ -14,8 +14,8 @@
 *   NOTE:
 *
 ******************************************************************************/
-#ifndef __STRUCT_H_
-#define __STRUCT_H_
+#ifndef __STRUCT_H
+#define __STRUCT_H
 
 #include <xc.h>
 #include <stdint.h>
@@ -24,16 +24,35 @@
 
 extern struct GlobalInformation         //Structure to pass information that is shared among modules
 {
-    bool        bat_low;                //Flag will be set if battery voltage detected too low
-    bool        wakeedge;               //Set this flag if we get an interrupt on INTx pin (feature no longer used)
-    float       battery_voltage;        //Container for measured battery voltage
+    /* Display Related  */
+    bool        disp_tmr_active;
+    uint8_t     disp_seconds_ctr;
+    uint8_t     next_disp_update;       // When tick1000ms matches this value, update the display again
+    uint8_t     next_disp_shtdn;        // When tick1000ms matches this value, turn display backlight off
     
-    uint16_t    tick10ms;               //Increases every 50mili tick1000monds 
-    uint16_t    tick100ms;              //Used to keep track of passing deci-tick1000monds
-    uint16_t    tick1000ms;             //Use this to tick tick1000monds -- might not be used for audio interface board
+    /* COUNTER RELATED */
+    uint16_t    tick20ms;               // Counts 0-4, resets every 100ms. 
+    uint16_t    tick100ms;              // Counts 0-4, resets every 500ms.  
+    uint16_t    tick500ms;              // Counts 0-1, resets every 1000ms.  
+    uint16_t    tick1000ms;             // Counts 0-56, resets every min.
 
-    uint8_t     int_temp_val;           // Integer value of temperature to be displayed on the screen
-    uint8_t     int_hum_val;            // Integer value of humidity to be displayed on the screen
+    /* BUTTON RELATED */
+    uint8_t     up_btn_press_ctr;
+    uint8_t     lo_btn_press_ctr;
+    uint8_t     btn_both_press_ctr;
+    bool        up_btn_pressed;
+    bool        lo_btn_pressed;
+    bool        both_btns_pressed;
+
+    /* Sensor Related */
+    uint16_t  tick20msloopctr
+    float     rh_value_1;
+    float     rh_offset_1;              // Stores the RH offset of sensor 1 upon calibration request
+    float     temp_value_1;
+    
+    float     rh_value_2;
+    float     rh_offset_2;              // Stores the RH offset of sensor 2 upon calibration request 
+    float     temp_value_2;
     
 } GlobalInformation;
 

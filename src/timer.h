@@ -3,155 +3,161 @@
 *
 *   PURPOSE: Header file for timer.c
 *
-*   DEVICE: PIC18F66K22
-*
-*   COMPILER: Microchip XC8 v1.32
-*
-*   IDE: MPLAB X v3.45
-*
 *   TODO:  
 *
 *   NOTE:
 *
 ******************************************************************************/
 
-#ifndef __TIMER_H_
-#define __TIMER_H_
+#ifndef __TIMER_H
+#define __TIMER_H
 
 #include <xc.h>                 //Part specific header file
 #include <stdint.h>
 #include <stdbool.h>
 #include "config.h"             //Project specific header file
 
-/********************************************************
-*FUNCTION: void Timer0Init(bool interrupts, uint8_t prescaler, uint8_t clksource )
-*PURPOSE: To initialize timer 0.  Note: function set up so that
-        timer will operate in 16 bit mode.
-*PRECONDITION: Timer 1 is not initialized
-*POSTCONDITION: Timer 1 is ready to use
-*RETURN: Nothing
-********************************************************/
-void Timer0Init(uint8_t interrupts, uint8_t prescaler, uint8_t clksource ) ;
+/* TIMER MNEMONICS */
+#define     TMR0_FSOC_DIV_BY_4  0
+#define     TMR0_PIN_T0CKI      1
 
-/********************************************************
-*FUNCTION: void Timer0On( void )
-*PURPOSE: To turn ON timer 0
-*PRECONDITION: Timer 1 could be OFF
-*POSTCONDITION: Timer 1 is now ON
-*RETURN: Nothing
-********************************************************/
+/*
+ * Function: void Timer0Init(uint8_t interrupts, uint16_t prescaler, uint8_t clksource )
+ * --------------------
+ * Timer 0 is initialized 
+ * Note: function designed such that timer will operate in 16 bit mode.
+ *
+ * returns: Nothing
+ */
+void Timer0Init(uint8_t interrupts, uint16_t prescaler, uint8_t clksource );
+
+/*
+ * Function: void Timer0On( void )
+ * --------------------
+ * Timer0 will begin to increment
+ *
+ * returns: Nothing
+ */
 void Timer0On( void );
 
-/********************************************************
-*FUNCTION: void Timer1Init( bool interrupts, uint8_t prescaler, bool clksource )
-*PURPOSE: To initialize timer 1
-*PRECONDITION: Timer 1 not initialized
-*POSTCONDITION: Timer 1 now initialized
-*RETURN: Nothing
-********************************************************/
-void Timer1Init( bool interrupts, uint8_t prescaler, bool clksource );
+/*
+ * Function: void Timer1Init( uint8_t interrupts, uint8_t prescaler, uint8_t clksource )
+ * --------------------
+ * Timer 1 is initialized When reading from timer one 
+ * in 16bit mode, we must read from the LOW byte first. 
+ * When we write to the timer, we must write to the LOW byte
+ * and then to the HIGH byte.  
+ *
+ * returns: Nothing
+ */
+void Timer1Init( uint8_t interrupts, uint8_t prescaler, uint8_t clksource );
 
-/********************************************************
-*FUNCTION: void Timer1On(uint8_t RegHigh, uint8_t RegLow)
-*PURPOSE: To turn ON timer 1
-*PRECONDITION: Timer 1 is not running
-*POSTCONDITION: Timer 1 now running with overflow period 
-                defined by RegHigh and RegLow (and prescaler)
-*RETURN: Nothing
-********************************************************/
+/*
+ * Function: void Timer1On(uint8_t RegHigh, uint8_t RegLow)
+ * --------------------
+ * Timer1 will begin to increment.  16 bit register shall
+ * be passed in.
+ *
+ * returns: Nothing
+ */
 void Timer1On(uint8_t RegHigh, uint8_t RegLow);
 
-/********************************************************
-*FUNCTION: void Timer1Off( void )
-*PURPOSE: To turn OFF timer 1
-*PRECONDITION: Timer 1 is running
-*POSTCONDITION: Timer 1 now stopped
-*RETURN: Nothing
-********************************************************/
+/*
+ * Function: void Timer1Off( void )
+ * --------------------
+ * Timer1 will cease to increment.  
+ *
+ * returns: Nothing
+ */
 void Timer1Off( void );
 
-/********************************************************
-*FUNCTION: void Timer2Init( bool interrupts, uint8_t prescaler, uint8_t postscaler )
-*PURPOSE: To initialize timer 2
-*PRECONDITION: Timer 2 not initialized
-*POSTCONDITION: Timer 2 now initialized
-*RETURN: Nothing
-********************************************************/
-void Timer2Init(bool interrupts, uint8_t prescaler, uint8_t postscaler);
+/*
+ * Function: void Timer2Init(bool interrupts, uint8_t prescaler, uint8_t postscaler)
+ * --------------------
+ * Timer 2 is initialized.
+ *
+ * returns: Nothing
+ */
+void Timer2Init(uint8_t interrupts, uint8_t prescaler, uint8_t postscaler);     
 
-/********************************************************
-*FUNCTION: void Timer2On(uint8_t period)
-*PURPOSE: To turn ON timer 2
-*PRECONDITION: Timer 2 is not running
-*POSTCONDITION: Timer 2 now running with overflow period 
-                defined by period register and pre/post scaler 
-*RETURN: Nothing
-********************************************************/
-void Timer2On(uint8_t period);
+/*
+ * Function: void Timer2On(uint8_t period)
+ * --------------------
+ * Timer1 will begin to increment.  8 bit value to
+ * load into the timer's register shall be passed in.
+ *
+ * returns: Nothing
+ */
+void Timer2On(uint8_t period);  
 
-/********************************************************
-*FUNCTION: void Timer2Off( void )
-*PURPOSE: To turn OFF timer 2
-*PRECONDITION: Timer 2 could be running 
-*POSTCONDITION: Timer 2 disabled 
-*RETURN: Nothing
-********************************************************/
+/*
+ * Function: void Timer2Off( void )
+ * --------------------
+ * Timer2 will cease to increment.  
+ *
+ * returns: Nothing
+ */
 void Timer2Off( void );
 
-/********************************************************
-*FUNCTION: void Timer3Init( bool interrupts, uint8_t prescaler, bool clksource )
-*PURPOSE: To initialize timer 3
-*PRECONDITION: Timer 3 not initialized
-*POSTCONDITION: Timer 3 now initialized
-*RETURN: Nothing
-********************************************************/
-void Timer3Init( bool interrupts, uint8_t prescaler, bool clksource );
+/*
+ * Function: void Timer3Init( bool interrupts, uint8_t prescaler, bool clksource )
+ * --------------------
+ * Timer 3 is initialized.
+ *
+ * returns: Nothing
+ */
+void Timer3Init( uint8_t interrupts, uint8_t prescaler, uint8_t clksource );
 
-/********************************************************
-*FUNCTION: void Timer3On(uint8_t RegHigh, uint8_t RegLow)
-*PURPOSE: To turn ON timer 3
-*PRECONDITION: Timer 3 is not running
-*POSTCONDITION: Timer 3 now running with overflow period 
-                defined by RegHigh and RegLow (and prescaler)
-*RETURN: Nothing
-********************************************************/
+/*
+ * Function: void Timer3On(uint8_t RegHigh, uint8_t RegLow)
+ * --------------------
+ * Timer 3 will begin to increment.  16 bit register shall
+ * be passed in.
+ *
+ * returns: Nothing
+ */
 void Timer3On(uint8_t RegHigh, uint8_t RegLow);
 
-/********************************************************
-*FUNCTION: void Timer3Off( void )
-*PURPOSE: To turn OFF timer 3
-*PRECONDITION: Timer 3 is running
-*POSTCONDITION: Timer 3 now stopped
-*RETURN: Nothing
-********************************************************/
+/*
+ * Function: void Timer3Off( void )
+ * --------------------
+ * Timer 3 will cease to increment.  
+ *
+ * returns: Nothing
+ */
 void Timer3Off( void );
 
-/********************************************************
-*FUNCTION: void Timer4Init( bool interrupts, uint8_t prescaler, uint8_t postscaler )
-*PURPOSE: To initialize timer 4
-*PRECONDITION: Timer 4 not initialized
-*POSTCONDITION: Timer 4 now initialized
-*RETURN: Nothing
-********************************************************/
-void Timer4Init( bool interrupts, uint8_t prescaler, bool clksource );
+/*
+ * Function: void Timer4Init( bool interrupts, uint8_t prescaler, uint8_t clksource )
+ * --------------------
+ * Timer 4 is initialized.  It is during initialization that it
+ * shall be determined whether or not interrupt shall be generatred
+ * on overflow.  
+ *
+ * returns: Nothing
+ */
+void Timer4Init( uint8_t interrupts, uint8_t prescaler, uint8_t clksource );
 
-/********************************************************
-*FUNCTION: void Timer4On(uint8_t period)
-*PURPOSE: To turn ON timer 4
-*PRECONDITION: Timer 4 is not running
-*POSTCONDITION: Timer 4 now running with overflow period 
-                defined by period register and pre/post scaler
-*RETURN: Nothing
-********************************************************/
+/*
+ * Function: void Timer4On( uint8_t period )
+ * --------------------
+ * To turn ON timer 4.  The perior register will 
+ * count up from 0x00 until the count value equals
+ * the user-defined period value.  At this point,
+ * the interrupt is triggered and the timer value 
+ * automatically reset.  
+ *
+ * returns: Nothing
+ */
 void Timer4On( uint8_t period );
 
-/********************************************************
-*FUNCTION: void Timer4Off( void )
-*PURPOSE: To turn OFF timer 2
-*PRECONDITION: Timer 2 could be running 
-*POSTCONDITION: Timer 2 disabled 
-*RETURN: Nothing
-********************************************************/
+/*
+ * Function: void Timer4Off( void )
+ * --------------------
+ * Timer 4 will cease to increment.  
+ *
+ * returns: Nothing
+ */
 void Timer4Off( void );
 
 #endif

@@ -1,130 +1,201 @@
 /******************************************************************************
-*   FILE: dispdriver.h
+*	FILE: disp.h
 *
-*   PURPOSE: Header file for dispdriver.h
+*	PURPOSE: Header file for display communication
+*			Target device: PIC18F66K22 (advanced 8 bit MCU).   
 *
-*   DEVICE: PIC18F66K22
+*	AUTHOR: Clinton Guenther
 *
-*   COMPILER: Microchip XC8 v1.32
-*
-*   IDE: MPLAB X v3.45
-*
-*   TODO:  
-*
-*   NOTE:
+*	TODO:	
 *
 ******************************************************************************/
-#ifndef __DISPDRIVER_H_
-#define __DISPDRIVER_H_
+
+#ifndef __DISP_H
+#define __DISP_H
 
 #include <xc.h>         //Part specific header file
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include "struct.h"
-#include "isr.h"
 #include "config.h"     //Project specific header file
-#include "timer.h"
 #include "main.h"
+#include "spi.h"
 
-/********************************************************
-*FUNCTION: DispSendChar(uint8_t bytein, bool command)
-*PURPOSE: Send one ASCII character to the display
-*PRECONDITION: Display and IO must be initialized. Note
-    that this function does not clear the display, nor does
-    it return the cursor prior to printing 
-*POSTCONDITION: One character will be be printed.
-*RETURN: Nothing
-********************************************************/
-void DispSendChar(uint8_t bytein, bool command);
+#define LF			1
+#define CR			2
 
-/********************************************************
-*FUNCTION: void CursorHome(void)
-*PURPOSE: Return the cursor to position 0
-*PRECONDITION: Display and IO must be initialized. Note that
-    this function does not clear the display. 
-*POSTCONDITION: Cursor will be HOME
-*RETURN: Nothing
-********************************************************/
-void CursorHome(void);
+/*
+ * Function: void DispInit ( void )
+ * --------------------
+ * Initialize the display
+ *
+ * returns: Nothing
+ */
+void DispInit ( void );
 
-/********************************************************
-*FUNCTION: void ClearDisp(void)
-*PURPOSE: Call to clear the display 
-*PRECONDITION: Display and IO must be initialized. Note that
-    this function does not send the cursor HOME. 
-*POSTCONDITION: Display will be clear, but cursor remains
-* at its previous location. 
-*RETURN: Nothing
-********************************************************/
-void ClearDisp(void);
+/*
+ * Function: void DispCursorHome( void )
+ * --------------------
+ * Set the display's cursor to the home position
+ *
+ * returns: Nothing
+ */
+void DispCursorHome( void );
 
-/********************************************************
-*FUNCTION: void DisplayInit(void)
-*PURPOSE: Send commads in proper sequence to initialize the 
-    display
-*PRECONDITION: Display IO must be initialized. 
-*POSTCONDITION: Display is ready for use
-*RETURN: Nothing
-********************************************************/
-void DisplayInit(void);
+/*
+ * Function: void DispClear( void )
+ * --------------------
+ * Clear the display
+ *
+ * returns: Nothing
+ */
+void DispClear( void );
 
-/********************************************************
-*FUNCTION: void DispSendString(const char * y)
-*PURPOSE: Send a string to the display.  Note, this function
-    will not properly handle strings that are longer in characters 
-    than what is supported.  
-*PRECONDITION: Display and IO must be initialized. Note
-    that this function does not clear the display, nor does
-    it return the cursor prior to printing 
-*POSTCONDITION: String of characters will be printed.
-*RETURN: Nothing
-********************************************************/
-void DispSendString(const char * y);
+/*
+ * Function: void DispWriteChar (uint8_t c)
+ * --------------------
+ * Write a character to the display at the current
+ * DDRAM memory address.  
+ *
+ * returns: Nothing
+ */
+void DispWriteChar (uint8_t c);
 
-/********************************************************
-*FUNCTION: void PrintUnsignedDecimal (uint8_t number)
-*PURPOSE: Print unsigned decimal value to the display 
-*PRECONDITION: Display and IO must be initialized. Note
-    that this function does not clear the display, nor does
-    it return the cursor prior to printing 
-*POSTCONDITION: Unsigned decimal number printed to display
-*RETURN: Nothing
-********************************************************/
-void PrintUnsignedDecimal (uint8_t number);
+/*
+ * Function: void DispWriteString(char * y)
+ * --------------------
+ * Write string to display.  Cursor position will 
+ * automatically increment, however, starting position
+ * shall first be defined.  Also, cursor will not
+ * automatically around to line two.  
+ *
+ * returns: Nothing
+ */
+void DispWriteString(char * y);
 
-/********************************************************
-*FUNCTION: void PrintFloat (float number)
-*PURPOSE: Print float value to display (%0.4f) 
-*PRECONDITION: Display and IO must be initialized. Note
-    that this function does not clear the display, nor does
-    it return the cursor prior to printing 
-*POSTCONDITION: Float value printed to display
-*RETURN: Nothing
-********************************************************/
-void PrintFloat (float number);
+/*
+ * Function: void DispWtLnOne ( char * y )
+ * --------------------
+ * Write to the first line of the display.  
+ * Cursor will automatically be placed at the 
+ * begining of the line.  If the string is shorter
+ * than 16 characters, than white spaces will be
+ * written to the display until the line is
+ * completely filled.  
+ * This writting of white spaces prevents the need to 
+ * first clear existing text on the line.     
+ *
+ * returns: Nothing
+ */
+void DispWtLnOne ( char * y );
 
-/********************************************************
-*FUNCTION: void DisplayON( void )
-*PURPOSE: Initialize and turn on display.  This function
-    will call DisplayInit()
-*PRECONDITION: Display IO must be initialized.
-*POSTCONDITION: Display ON and ready.
-*RETURN: Nothing
-********************************************************/
-void DisplayON( void );
+/*
+ * Function: void DispWtLnTwo ( char * y )
+ * --------------------
+ * Write to the second line of the display.  
+ * Cursor will automatically be placed at the 
+ * begining of the second line.  If the 
+ * string is shorter than 16 characters, 
+ * than white spaces will be written to the
+ * display until the line is completely filled.  
+ * This writting of white spaces prevents the need to 
+ * first clear existing text on the line.     
+ *
+ * returns: Nothing
+ */
+void DispWtLnTwo ( char * y );
 
-/********************************************************
-*FUNCTION: void DisplayOFF( void )
-*PURPOSE: Remove power from the display, and set display IO
-    to HI-Z to keep from backfeeding display power through IO lins
-*PRECONDITION: Display likely initialized and ON.  Proper direction
-    bits set for MCU IO that controls high-side P-FET.  
-*POSTCONDITION: Display OFF (low power draw)
-*RETURN: Nothing
-********************************************************/
-void DisplayOFF( void );
+/*
+ * Function: void DispLineTwo (void )
+ * --------------------
+ * A call to this function will place the 
+ * cursor at the beginning of the second line.  
+ *
+ * returns: Nothing
+ */
+void DispLineTwo (void );
+
+/*
+ * Function: void DispLineOne (void )
+ * --------------------
+ * A call to this function will place the 
+ * cursor at the beginning of the first line.  
+ *
+ * returns: Nothing
+ */
+void DispLineOne (void );
+
+/*
+ * Function: void DispSetContrast(uint8_t percentage)
+ * --------------------
+ * Sets the contrast of the display.  Pass in 
+ * the desired contrast value (0-100%)
+ *
+ * returns: Nothing
+ */
+void DispSetContrast(uint8_t percentage);
+
+/*
+ * Function: void DispRefresh( void )
+ * --------------------
+ * Completely clear the dispaly and 
+ * return the cursor to the home position
+ * on the first line.  
+ *
+ * returns: Nothing
+ */
+void DispRefresh( void );
+
+/*
+ * Function: void DispWriteFloat (float number)
+ * --------------------
+ * Write a float value to the display.  
+ * Value is written at wherever the cursor
+ * was previously positioned.  
+ *
+ * returns: Nothing
+ */
+void DispWriteFloat (float number);
+
+/*
+ * Function: void PrintDecimalNumber (uint16_t number)
+ * --------------------
+ * Write a decimal value to the display.  
+ * Value is written at wherever the cursor
+ * was previously positioned.  
+ *
+ * returns: Nothing
+ */
+void PrintDecimalNumber (uint16_t number);
+
+/*
+ * Function: void DispWrite8b (uint8_t number)
+ * --------------------
+ * Write a binary eight-bit value to the display.  
+ * Value is written at wherever the cursor
+ * was previously positioned.  
+ *
+ * returns: Nothing
+ */
+void DispWrite8b (uint8_t number);
+
+/*
+ * Function: TODO comment
+ * --------------------
+ *
+ * returns: Nothing
+ */
+void GetNewDisplayRefreshTime ( void );
+
+/*
+ * Function: TODO comment
+ * --------------------
+ *
+ * returns: Nothing
+ */
+void GetNewDisplayShtdnTime( void );
 
 #endif
+/* END OF FILE */

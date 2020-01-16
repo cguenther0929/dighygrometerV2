@@ -4,12 +4,6 @@
 *   PURPOSE: Interrupt service routines are contained in this file.  This file contains
 *           algorithms that pertain to the interrupt service routine.
 *
-*   DEVICE: PIC18F66K22
-*
-*   COMPILER: Microchip XC8 v1.32
-*
-*   IDE: MPLAB X v3.45
-*
 *   TODO:  
 *
 *   NOTE:
@@ -62,7 +56,8 @@ void PORTBINTSetup( uint8_t channel, bool edge_rising, bool highpri ) {
 
 }
 
-void interrupt high_priority edges_isr( void ) {     
+// void interrupt high_priority edges_isr( void ) {     
+__interrupt (high_priority) void edges_isr( void ) {     
     
     if(INTCONbits.INT0IF){
         INTCONbits.INT0IF = 0;
@@ -83,36 +78,49 @@ void interrupt high_priority edges_isr( void ) {
 
 }
 
-void interrupt low_priority main_isr( void ) {
+// void interrupt low_priority main_isr( void ) {
+__interrupt (low_priority) void main_isr( void ) {
 
     uint8_t temp = 0;
     
     if(TMR0IF){                                     //Timer 1 interrupt
-        TMR0H = TMR0HIGH;                        //Load the high register for the timer -- looking for 1/100 of a tick1000ms
-        TMR0L = TMR0LOW;                        //Load the low register for the timer
+        TMR0IF = 0;                                 //Software is responsible for clearing this flag
+        TMR0H = TMR0HIGH;                           //Load the high register for the timer -- looking for 1/100 of a tick1000ms
+        TMR0L = TMR0LOW;                            //Load the low register for the timer
         
-        Events10ms();
+        gblinfo.flag20ms = true;
         
-        if(gblinfo.tick10ms >= 9) {
-            gblinfo.tick10ms = 0;               //Reset centi-tick1000monds
-            Events100ms();
-            if(gblinfo.tick100ms >= 9) {         //Once Second Reached
-                gblinfo.tick100ms = 0;           //Reset 100 milliseconds ounter
-                Events1000ms();                 //Look at events that are to happen every 1s
-                if(gblinfo.tick1000ms >= 59)                     //We've ticked away one minute, so reset
-                    gblinfo.tick1000ms = 0;                      //Reset seconds counter
-                else
-                    gblinfo.tick1000ms += 1;                     //Increment seconds counter
-            }
-            else {
-                 gblinfo.tick100ms += 1;                         //Increment 100 millisecond timer 
-            }
-        }
-        else {
-            gblinfo.tick10ms += 1;                               //Increment 1 millisecond timer
-        }
+        if(gblinfo.tick20ms >= 4) {
+            gblinfo.tick20ms = 0;               
+            gblinfo.flag100ms = true;
+            
+            if(gblinfo.tick100ms >= 4) {             //500ms increment 
+                gblinfo.tick100ms = 0;           
+                gblinfo.flag500ms = true;
+                
+                if(gblinfo.tick500ms >= 1) {         //We've ticked away one second
 
-        TMR0IF = 0;                         //Software is responsible for clearing this flag
+                    gblinfo.tick500ms = 0;           //Reset seconds counter
+                    gblinfo.flag1000ms = true;
+                    
+                    if(gblinfo.tick1000ms >= 59) 
+                        gblinfo.tick1000ms = 0;
+                    else
+                        gblinfo.tick1000ms = 0;
+                
+                }   
+                
+                else
+                    gblinfo.tick500ms += 1;                     //Increment seconds counter
+            }
+            
+            else 
+                gblinfo.tick100ms += 1;                         //Increment 100 millisecond timer 
+        }
+        else 
+            gblinfo.tick20ms += 1;                               //Increment 1 millisecond timer
+        
+
     }   /* END IF FOR TMR1IF */
     
     // if(PIR2bits.TMR3IF){
@@ -122,9 +130,6 @@ void interrupt low_priority main_isr( void ) {
 
     if(INT1IF){
         INTCON3bits.INT1IF = 0;     //Clear the interrupt flag
-        if(RB1 == 1){
-            gblinfo.wakeedge = true;        //This feature is no longer used -- replaced by sleep function
-        }
     }
     
     // if(INTCON3bits.INT2IF){
@@ -136,18 +141,6 @@ void interrupt low_priority main_isr( void ) {
     // }
     
 } /* END void interrupt low_priority main_isr( void ) */
-
-void Events10ms(void) {                  //Keep routine slim!
-}
-
-void Events100ms(void) {                //Keep routine slim!
-    
-}
-
-void Events1000ms(void) {
-    PULSEOUT = ~PULSEOUT;
-}
-
 
 void DisableInterrupts( void ) {
     GIEH = 0;           //Disable high priority interrupts
