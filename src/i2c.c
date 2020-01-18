@@ -16,7 +16,7 @@ void I2Cinit( void ) {
 	SMP2 = 1;                   // Slew rate control bit (0=Slew Rate Control enabled for high speed mode; 1=Disabled for standard speed)
     WCOL2 = 0;                  // Write collision detect bit.  Must be cleared in SW.
     SSPOV2 = 0;                 // Receiver overflow indicator bit. Must be cleared in SW.
-	SSPM2 = 8;                  // I2C Master Mode. CLOCK RATE = FOSC/(4*(SSPADD+1)) p.293
+	SSP2CON1bits.SSPM = 8;      // I2C Master Mode. CLOCK RATE = FOSC/(4*(SSPADD+1)) p.293
 	SSPEN2 = 1;	                // Enable the I2C module and configure the SDA and SCL Pins as serial port pins
     
     /* LOAD THE BAUD RATE GENERATOR WITH THE APPROPIATE VALUE */
@@ -71,8 +71,8 @@ void I2CWrite_8b(uint8_t baseaddress, uint8_t command, uint8_t data) {
 
     if (WCOL2){                                                // Bus collision detected (p.320)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 1001")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 1001");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
 
@@ -88,8 +88,8 @@ void I2CWrite_8b(uint8_t baseaddress, uint8_t command, uint8_t data) {
 
     if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 1002")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 1002");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
     
@@ -101,8 +101,8 @@ void I2CWrite_8b(uint8_t baseaddress, uint8_t command, uint8_t data) {
      * command register
      */    
     if(ACKSTAT2 == NACK){     //Slave did not acknowledge transmission of base address
-        DispWtLnOne("I2C ERR 1003")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 1003");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
 
@@ -115,8 +115,8 @@ void I2CWrite_8b(uint8_t baseaddress, uint8_t command, uint8_t data) {
     
     if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 1004")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 1004");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
 
@@ -127,9 +127,9 @@ void I2CWrite_8b(uint8_t baseaddress, uint8_t command, uint8_t data) {
      * after transmitting command  
      * to sensor 
      */    
-    if(ACKSTAT2 == NACK){     //Slave did not acknowledge transmission of base address
-        DispWtLnOne("I2C ERR 1005")
-        DispWtLnTwo("INFINITE LOOP")
+    if(ACKSTAT2 == NACK){                   //Slave did not acknowledge transmission of base address
+        DispWtLnOne("I2C ERR 1005");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
 
@@ -142,8 +142,8 @@ void I2CWrite_8b(uint8_t baseaddress, uint8_t command, uint8_t data) {
     
     if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 1006")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 1006");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
 
@@ -155,8 +155,8 @@ void I2CWrite_8b(uint8_t baseaddress, uint8_t command, uint8_t data) {
      * to sensor 
      */    
     if(ACKSTAT2 == NACK){     //Slave did not acknowledge transmission of base address
-        DispWtLnOne("I2C ERR 1007")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 1007");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
 
@@ -229,8 +229,8 @@ uint8_t I2CRead_8b(uint8_t baseaddress, uint8_t command) {
     
     if (WCOL2){                                                // Bus collision detected (p.320)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 2001")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 2001");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
     
@@ -245,8 +245,8 @@ uint8_t I2CRead_8b(uint8_t baseaddress, uint8_t command) {
     
     if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 2002")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 2002");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
     
@@ -258,8 +258,8 @@ uint8_t I2CRead_8b(uint8_t baseaddress, uint8_t command) {
      * command register
      */    
     if(ACKSTAT2 == NACK){     //Slave did not acknowledge transmission of base address
-        DispWtLnOne("I2C ERR 2003")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 2003");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
 
@@ -272,8 +272,8 @@ uint8_t I2CRead_8b(uint8_t baseaddress, uint8_t command) {
     
     if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 2004")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 2004");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
 
@@ -285,10 +285,11 @@ uint8_t I2CRead_8b(uint8_t baseaddress, uint8_t command) {
      * register command 
      */    
     if(ACKSTAT2 == NACK){     //Slave did not acknowledge transmission of base address
-        DispWtLnOne("I2C ERR 2005")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 2005");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
-
+    }
+    
     /*
      * Create the repeated start condition
      */
@@ -298,8 +299,8 @@ uint8_t I2CRead_8b(uint8_t baseaddress, uint8_t command) {
     
     if (WCOL2){                                                // Bus collision detected (p.320)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 2006")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 2006");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
     
@@ -314,8 +315,8 @@ uint8_t I2CRead_8b(uint8_t baseaddress, uint8_t command) {
     
     if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 2007")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 2007");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
 
@@ -327,8 +328,8 @@ uint8_t I2CRead_8b(uint8_t baseaddress, uint8_t command) {
      * command register
      */    
     if(ACKSTAT2 == NACK){                   // Slave did not acknowledge transmission of base address
-        DispWtLnOne("I2C ERR 2008")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 2008");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
 
@@ -432,8 +433,8 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
     
     if (WCOL2){                                                // Bus collision detected (p.320)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 0001")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 0001");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
     
@@ -448,8 +449,8 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
     
     if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 0002")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 0002");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
     
@@ -461,8 +462,8 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
      * command register
      */    
     if(ACKSTAT2 == NACK){     //Slave did not acknowledge transmission of base address
-        DispWtLnOne("I2C ERR 0003")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 0003");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
 
@@ -475,8 +476,8 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
     
     if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 0004")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 0004");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
 
@@ -491,8 +492,8 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
     
     if (WCOL2){                                                // Bus collision detected (p.320)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 0005")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 0005");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
     
@@ -507,8 +508,8 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
     
     if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 0006")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 0006");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
 
@@ -520,8 +521,8 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
      * command register
      */    
     if(ACKSTAT2 == NACK){                   // Slave did not acknowledge transmission of base address
-        DispWtLnOne("I2C ERR 0007")
-        DispWtLnTwo("INFINITE LOOP")
+        DispWtLnOne("I2C ERR 0007");
+        DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
 

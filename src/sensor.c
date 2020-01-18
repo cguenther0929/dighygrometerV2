@@ -12,7 +12,7 @@
 #include "sensor.h"
 
 void SelectSensor (uint8_t sensor_select) {
-    SelectSensor = SELECT_SENSOR_1 ? (SEL_SENSOR2_BIT = SELECT_SENSOR_1):(SEL_SENSOR2_BIT = SELECT_SENSOR_2);
+    sensor_select = SELECT_SENSOR_1 ? (SEL_SENSOR2_BIT = SELECT_SENSOR_1):(SEL_SENSOR2_BIT = SELECT_SENSOR_2);
 }
 
 void EnableHeater( uint8_t level ) {

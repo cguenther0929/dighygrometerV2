@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "main.h"
+#include "config.h"
 
 /*
  * The following equation is listed on page 22/35 in the SI7020 datasheet.
@@ -69,7 +70,7 @@
 #define SI7020_ID_BYTE2_2               0xC9
 
 #define SI7020_READ_FW_VER_1            0x84
-#define SI7020_READ_FW_VER_1            0xB8
+#define SI7020_READ_FW_VER_2            0xB8
 
 #define I2C_WRITE_BIT                   0x01            // Sample write == 1000000 + 1
 #define I2C_READ_BIT                    0x00            // Sample read == 1000000 + 0

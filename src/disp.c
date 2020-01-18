@@ -10,8 +10,9 @@
  *
 ******************************************************************************/
 
-// #include "spi.h"		//Include the header file for this module
 #include "disp.h"
+
+struct GlobalInformation gblinfo;
 
 void DispInit ( void ) {
     uint8_t i;

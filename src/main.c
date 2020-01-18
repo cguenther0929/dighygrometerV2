@@ -13,68 +13,68 @@
 #include "main.h" //Include header file associated with main.c
 
 // CONFIG1L
-#pragma config RETEN = OFF      // VREG Sleep Enable bit (Disabled - Controlled by SRETEN bit)
-#pragma config INTOSCSEL = HIGH // LF-INTOSC Low-power Enable bit (LF-INTOSC in High-power mode during Sleep)
-#pragma config SOSCSEL = DIG    // SOSC Power Selection and mode Configuration bits (Digital (SCLKI) mode)
-#pragma config XINST = OFF      // Extended Instruction Set (Disabled)
+#pragma config RETEN        = OFF      // VREG Sleep Enable bit (Disabled - Controlled by SRETEN bit)
+#pragma config INTOSCSEL    = HIGH // LF-INTOSC Low-power Enable bit (LF-INTOSC in High-power mode during Sleep)
+#pragma config SOSCSEL      = DIG    // SOSC Power Selection and mode Configuration bits (Digital (SCLKI) mode)
+#pragma config XINST        = OFF      // Extended Instruction Set (Disabled)
 
 // CONFIG1H
-#pragma config FOSC = INTIO1    // Internal RC Oscillator with output on OSC2.  p45/550.
-#pragma config PLLCFG = OFF     // PLL x4 Enable bit (Disabled)
-#pragma config FCMEN = OFF      // Fail-Safe Clock Monitor (Disabled)
-#pragma config IESO = OFF       // Internal External Oscillator Switch Over Mode (Disabled)
+#pragma config FOSC         = INTIO1    // Internal RC Oscillator with output on OSC2.  p45/550.
+#pragma config PLLCFG       = OFF     // PLL x4 Enable bit (Disabled)
+#pragma config FCMEN        = OFF      // Fail-Safe Clock Monitor (Disabled)
+#pragma config IESO         = OFF       // Internal External Oscillator Switch Over Mode (Disabled)
 
 // CONFIG2L
-#pragma config PWRTEN = ON      // Power Up Timer (Enabled)
-#pragma config BOREN = SBORDIS  // Brown Out Detect (Enabled in hardware, SBOREN disabled)
-#pragma config BORV = 1         // Brown-out Reset Voltage bits (2.7V)
-#pragma config BORPWR = ZPBORMV // BORMV Power level (ZPBORMV instead of BORMV is selected)
+#pragma config PWRTEN       = ON      // Power Up Timer (Enabled)
+#pragma config BOREN        = SBORDIS  // Brown Out Detect (Enabled in hardware, SBOREN disabled)
+#pragma config BORV         = 1         // Brown-out Reset Voltage bits (2.7V)
+#pragma config BORPWR       = ZPBORMV // BORMV Power level (ZPBORMV instead of BORMV is selected)
 
 // CONFIG2H
-#pragma config WDTEN = OFF      // Watchdog Timer Disabled in HW
-#pragma config WDTPS = 1024     // Watchdog Postscaler (1:1024)
+#pragma config WDTEN        = OFF      // Watchdog Timer Disabled in HW
+#pragma config WDTPS        = 1024     // Watchdog Postscaler (1:1024)
 
 // CONFIG3L
-#pragma config RTCOSC = SOSCREF // RTCC Clock Select (RTCC uses SOSC)
+#pragma config RTCOSC       = SOSCREF // RTCC Clock Select (RTCC uses SOSC)
 
 // CONFIG3H
-#pragma config CCP2MX = PORTC   // CCP2 Mux (RC1)
-#pragma config MSSPMSK = MSK7   // MSSP address masking (7 Bit address masking mode)
-#pragma config MCLRE = ON       // Master Clear Enable (MCLR Enabled, RG5 Disabled)
+#pragma config CCP2MX       = PORTC   // CCP2 Mux (RC1)
+#pragma config MSSPMSK      = MSK7   // MSSP address masking (7 Bit address masking mode)
+#pragma config MCLRE        = ON       // Master Clear Enable (MCLR Enabled, RG5 Disabled)
 
 // CONFIG4L
-#pragma config STVREN = ON      // Stack Overflow Reset (Enabled)
-#pragma config BBSIZ = BB2K     // Boot Block Size (2K word Boot Block size)
+#pragma config STVREN       = ON      // Stack Overflow Reset (Enabled)
+#pragma config BBSIZ        = BB2K     // Boot Block Size (2K word Boot Block size)
 
 // CONFIG5L
-#pragma config CP0 = OFF        // Code Protect 00800-03FFF (Disabled)
-#pragma config CP1 = OFF        // Code Protect 04000-07FFF (Disabled)
-#pragma config CP2 = OFF        // Code Protect 08000-0BFFF (Disabled)
-#pragma config CP3 = OFF        // Code Protect 0C000-0FFFF (Disabled)
+#pragma config CP0          = OFF        // Code Protect 00800-03FFF (Disabled)
+#pragma config CP1          = OFF        // Code Protect 04000-07FFF (Disabled)
+#pragma config CP2          = OFF        // Code Protect 08000-0BFFF (Disabled)
+#pragma config CP3          = OFF        // Code Protect 0C000-0FFFF (Disabled)
 
 // CONFIG5H
-#pragma config CPB = OFF        // Code Protect Boot (Disabled)
-#pragma config CPD = OFF        // Data EE Read Protect (Disabled)
+#pragma config CPB          = OFF        // Code Protect Boot (Disabled)
+#pragma config CPD          = OFF        // Data EE Read Protect (Disabled)
 
 // CONFIG6L
-#pragma config WRT0 = OFF       // Table Write Protect 00800-03FFF (Disabled)
-#pragma config WRT1 = OFF       // Table Write Protect 04000-07FFF (Disabled)
-#pragma config WRT2 = OFF       // Table Write Protect 08000-0BFFF (Disabled)
-#pragma config WRT3 = OFF       // Table Write Protect 0C000-0FFFF (Disabled)
+#pragma config WRT0         = OFF       // Table Write Protect 00800-03FFF (Disabled)
+#pragma config WRT1         = OFF       // Table Write Protect 04000-07FFF (Disabled)
+#pragma config WRT2         = OFF       // Table Write Protect 08000-0BFFF (Disabled)
+#pragma config WRT3         = OFF       // Table Write Protect 0C000-0FFFF (Disabled)
 
 // CONFIG6H
-#pragma config WRTC = OFF       // Config. Write Protect (Disabled)
-#pragma config WRTB = OFF       // Table Write Protect Boot (Disabled)
-#pragma config WRTD = OFF       // Data EE Write Protect (Disabled)
+#pragma config WRTC         = OFF       // Config. Write Protect (Disabled)
+#pragma config WRTB         = OFF       // Table Write Protect Boot (Disabled)
+#pragma config WRTD         = OFF       // Data EE Write Protect (Disabled)
 
 // CONFIG7L
-#pragma config EBRT0 = OFF      // Table Read Protect 00800-03FFF (Disabled)
-#pragma config EBRT1 = OFF      // Table Read Protect 04000-07FFF (Disabled)
-#pragma config EBRT2 = OFF      // Table Read Protect 08000-0BFFF (Disabled)
-#pragma config EBRT3 = OFF      // Table Read Protect 0C000-0FFFF (Disabled)
+#pragma config EBRT0        = OFF      // Table Read Protect 00800-03FFF (Disabled)
+#pragma config EBRT1        = OFF      // Table Read Protect 04000-07FFF (Disabled)
+#pragma config EBRT2        = OFF      // Table Read Protect 08000-0BFFF (Disabled)
+#pragma config EBRT3        = OFF      // Table Read Protect 0C000-0FFFF (Disabled)
 
 // CONFIG7H
-#pragma config EBRTB = OFF      // Table Read Protect Boot (Disabled)
+#pragma config EBRTB        = OFF      // Table Read Protect Boot (Disabled)
 
 struct GlobalInformation gblinfo;
 extern App_State app_state = STATE_IDLE;
@@ -97,7 +97,7 @@ void main()
             gblinfo.flag100ms = false;
             
             if(gblinfo.tick1000ms == gblinfo.next_disp_update){
-                gblinfo.next_disp_update    = GetNewDisplayRefreshTime( void );
+                GetNewDisplayRefreshTime( );
                 app_state       = UPDATE_DISPLAY;
             }
             
@@ -170,7 +170,8 @@ void EvaluateState( void ) {
     switch(app_state) {
         case STATE_IDLE:
 
-            if(gblinfo.tick20msloopctr >= COUNTS_20MS_BETWEEN_SENSOR_UPDATE)
+            // if(gblinfo.tick20msloopctr >= COUNTS_20MS_BETWEEN_SENSOR_UPDATE)
+            if(gblinfo.tick20msloopctr >= 10)
                 app_state = STATE_GRAB_SENSOR_DATA;
             else
                 gblinfo.tick20msloopctr++;
@@ -213,15 +214,15 @@ void EvaluateState( void ) {
 
         case UPDATE_DISPLAY:
             DISP_ENABLE = DISPLAY_ON;
-            gblinfo.next_disp_shtdn     = GetNewDisplayShtdnTime( void );
+            GetNewDisplayShtdnTime( );
             
             DispRefresh();      // Puts cursor on line one, too
             DispWriteString("T1:"); PrintDecimalNumber((uint16_t) gblinfo.temp_value_1); DispWriteString("  ");
-            DispWriteString("H1:"); PrintDecimalNumber(((uint16_t) gblinfo.rh_value_1);
+            DispWriteString("H1:"); PrintDecimalNumber((uint16_t) gblinfo.rh_value_1);
             
             DispLineTwo();
             DispWriteString("T2:"); PrintDecimalNumber((uint16_t) gblinfo.temp_value_2); DispWriteString("  ");
-            DispWriteString("H2:"); PrintDecimalNumber(((uint16_t) gblinfo.rh_value_2);
+            DispWriteString("H2:"); PrintDecimalNumber((uint16_t) gblinfo.rh_value_2);
 
             app_state = STATE_IDLE;
         break;
@@ -441,8 +442,9 @@ void SetUp(void)
     /* INITIALIZE SPI INTERFACE FOR DISPLAY */
     SPI1Init();
 
-    AnalogRefSel(REF2D048, EXTREF);             // Use internal 2.048V reference and External VREF pin for negative reference -- page 216/380
-    InitA2D(RIGHT_JUSTIFIED, 4);                // Set up AD (Justification, Acq Time TADs) ==> (Right, 4 TAD) -- page 361/550
+    //TODO remove?
+    // AnalogRefSel(REF2D048, EXTREF);             // Use internal 2.048V reference and External VREF pin for negative reference -- page 216/380
+    // InitA2D(RIGHT_JUSTIFIED, 4);                // Set up AD (Justification, Acq Time TADs) ==> (Right, 4 TAD) -- page 361/550
 
     /* SETUP ANALOG CHANNELS */
     ANCON0 = 0x00;                      // Analog channels 7-0 are configured for digital inputs. p.363

@@ -36,6 +36,11 @@ extern struct GlobalInformation         //Structure to pass information that is 
     uint16_t    tick500ms;              // Counts 0-1, resets every 1000ms.  
     uint16_t    tick1000ms;             // Counts 0-56, resets every min.
 
+    bool        flag20ms;
+    bool        flag100ms;
+    bool        flag500ms;
+    bool        flag1000ms;
+
     /* BUTTON RELATED */
     uint8_t     up_btn_press_ctr;
     uint8_t     lo_btn_press_ctr;
@@ -45,7 +50,7 @@ extern struct GlobalInformation         //Structure to pass information that is 
     bool        both_btns_pressed;
 
     /* Sensor Related */
-    uint16_t  tick20msloopctr
+    uint16_t  tick20msloopctr;
     float     rh_value_1;
     float     rh_offset_1;              // Stores the RH offset of sensor 1 upon calibration request
     float     temp_value_1;

@@ -21,7 +21,6 @@
 #include "isr.h"
 #include "config.h"     //Project specific header file
 #include "timer.h"
-#include "rfm69.h"
 #include "main.h"
 
 #define spidelay        50             //Define a small delay
@@ -53,7 +52,7 @@ void SPI2Init( void );
  * 
  * returns: Nothing
  */
-void RFMSPI2Write(uint8_t addr, uint8_t data);
+// void RFMSPI2Write(uint8_t addr, uint8_t data);
 
 /*
  * Function: void RFMSPI2WriteBurst(uint8_t addr, const char * data, uint8_t len)
@@ -63,7 +62,7 @@ void RFMSPI2Write(uint8_t addr, uint8_t data);
  * 
  * returns: Nothing
  */
-void RFMSPI2WriteBurst(uint8_t addr, const char * data, uint8_t len);
+// void RFMSPI2WriteBurst(uint8_t addr, const char * data, uint8_t len);
 
 /*
  * Function: void RFMSPI2ReadBurst(uint8_t addr, char * data, uint8_t len)
@@ -73,7 +72,7 @@ void RFMSPI2WriteBurst(uint8_t addr, const char * data, uint8_t len);
  * 
  * returns: Nothing
  */
-void RFMSPI2ReadBurst(uint8_t addr, char * data, uint8_t len);
+// void RFMSPI2ReadBurst(uint8_t addr, char * data, uint8_t len);
 
 /*
  * Function: uint8_t RFMSPI2Read(uint8_t addr)
@@ -84,7 +83,7 @@ void RFMSPI2ReadBurst(uint8_t addr, char * data, uint8_t len);
  * returns: Byte of data extracted from SPI
  * transaction
  */
-uint8_t RFMSPI2Read(uint8_t addr);     
+// uint8_t RFMSPI2Read(uint8_t addr);     
 
 /*
  * Function: void DispSPI1Write(uint8_t data)
