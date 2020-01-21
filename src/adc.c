@@ -18,7 +18,7 @@
 
 #include "adc.h"        //Include the header file for this module
 
-void InitA2D(bool format, uint8_t acqtime, uint8_t prescaler) {
+void InitA2D(uint8_t format, uint8_t acqtime, uint8_t prescaler) {
 
     switch (format) {
         case 0:

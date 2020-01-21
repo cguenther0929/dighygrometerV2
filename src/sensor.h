@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "main.h"
+#include "i2c.h"
 #include "config.h"
 
 /*

@@ -77,8 +77,8 @@
 #pragma config EBRTB        = OFF      // Table Read Protect Boot (Disabled)
 
 struct GlobalInformation gblinfo;
-extern App_State app_state = STATE_IDLE;
-extern Disp_Actions disp_actions = DISP_TMR_DISABLE;
+App_State app_state = STATE_IDLE;
+Disp_Actions disp_actions = DISP_TMR_DISABLE;
 
 void main()
 {
@@ -188,6 +188,7 @@ void EvaluateState( void ) {
 
             if(gblinfo.both_btns_pressed) {
                 gblinfo.both_btns_pressed = false;
+                app_state = STATE_MAKE_NETWORK_CONNECTION;
             }
 
         break;
@@ -246,6 +247,19 @@ void EvaluateState( void ) {
         case STATE_CLEAR_CALIBRATE:
             gblinfo.rh_offset_1 = 0;
             gblinfo.rh_offset_2 = 0;
+
+            app_state = STATE_IDLE;
+            break;
+        
+        case STATE_MAKE_NETWORK_CONNECTION:
+            SetEspConnectionMode(ESP_CIPMUX_MULTIPLE_CONNECTION);
+            tick20msDelay(5);
+
+            SetEspCipmuxMode(ESP_CIPMUX_MULTIPLE_CONNECTION);
+            tick20msDelay(5);
+
+            JoinNetwork(WIFI_ROUTER_SSID, WIFI_ROUTER_PASSWORD);
+            tick20msDelay(5);
 
             app_state = STATE_IDLE;
             break;
@@ -382,7 +396,7 @@ void SetUp(void)
     TRISC6 = output;                    // Serial transmit line to WiFi module
     TRISC7 = input;                     // Serial receive line from WiFi module
 
-    /* UNUSED PINS DEFINED AS OUTPUTS TO SAVE POWER */  //TODO update this list
+    /* UNUSED PINS DEFINED AS OUTPUTS TO SAVE POWER */  
     TRISA7 = output;
     TRISA3 = output;
     TRISA4 = output;
@@ -455,6 +469,11 @@ void SetUp(void)
     gblinfo.tick500ms = 0;
     gblinfo.tick1000ms = 0;
 
+    /* Enable the UART */
+    SetUpUART();
+    EnableUart1Interrupts( UART_RX_HIGH_PRIORITY );
+    
+    
     /* TIMER FOR APPLICATION INTERRUPTS */
     Timer0Init(TMR0_INTUP_SETTING, TMR0_PRESCALER, TMR0_FSOC_DIV_BY_4); //ARGS: interrupts, prescaler, clksource = FOSC/4
     Timer0On();

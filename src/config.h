@@ -37,7 +37,7 @@
 #define BUGVER                  0x00
 
 /* DEFINITIONS RELATED TO DISPLAY */
-#warning "Display update time shall be >> than display backlight time!"
+// #warning "Display update time shall be >> than display backlight time!"
 
 #define MAX_DISP_DWELL                      5               // Max amount of time (in seconds) display is allowed to be ON  <-- TODO remove is no longer needed 
 #define SECONDS_BETWEEN_DISP_UPDATE         10              // Amount of time (in seconds) that will pass between display updates            

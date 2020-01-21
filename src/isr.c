@@ -13,6 +13,7 @@
 #include "isr.h"                //Include the header file for this module.
 
 struct GlobalInformation gblinfo;
+struct UARTMembers  uart;         //Structure for all thing UART related
 
 void Init_Interrupts( void ) {
 
@@ -58,6 +59,18 @@ void PORTBINTSetup( uint8_t channel, bool edge_rising, bool highpri ) {
 
 // void interrupt high_priority edges_isr( void ) {     
 __interrupt (high_priority) void edges_isr( void ) {     
+    
+    /* Handle UART interrupt */
+    if(RC1IF) {                                     // Flag set when a character is received form the UART
+        uart.rxchar = RCREG;
+        
+        uart.rxbuf[uart.new_byte] = RCREG;          // Load this byte into rx buffer  
+            
+        uart.data_count += 1;                                                   //Increase data counter
+        (uart.new_byte >= MAX_BUFFER) ? (uart.new_byte = 0):(uart.new_byte += 1);       //Increase "producer" index
+        
+        RC1IF = 0;                                   //Clear the interrupt flag.
+    }
     
     if(INTCONbits.INT0IF){
         INTCONbits.INT0IF = 0;

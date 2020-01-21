@@ -58,7 +58,7 @@ uint16_t ReadA2D( uint8_t CHAN, bool FILTER );
 *POSTCONDITION: A2D is initialized
 *RETURN: Nothing
 ********************************************************/
-void InitA2D(bool format, uint8_t acqtime, uint8_t prescaler);
+void InitA2D(uint8_t format, uint8_t acqtime, uint8_t prescaler);
 
 /********************************************************
 *FUNCTION: EnableAnalogCh

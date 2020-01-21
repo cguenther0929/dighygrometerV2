@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "i2c.h"
 #include "config.h"     //Project specific header file
 #include "struct.h"
 #include "sensor.h"
@@ -27,6 +28,8 @@
 #include "spi.h"
 #include "disp.h"
 #include "adc.h"
+#include "uart.h"
+#include "wifi.h"
 
 /* Main Application States */
 typedef enum
@@ -35,7 +38,8 @@ typedef enum
     STATE_GRAB_SENSOR_DATA,
     UPDATE_DISPLAY,
     STATE_CALIBRATE,
-    STATE_CLEAR_CALIBRATE
+    STATE_CLEAR_CALIBRATE,
+    STATE_MAKE_NETWORK_CONNECTION
 } App_State;
 
 typedef enum{
