@@ -153,32 +153,32 @@ void ResetRxBuffer( void ) {
     RC1IE = 1;                                                      //Turn UART interrupts back on
 }
 
-// void PrintUnsignedDecimal (uint16_t number, uint8_t action) {
-//     char temphex[5];        //Define the array that will hold the ASCII values
-//     uint8_t i;                //Use this as a counter
-//     uint16_t j=0;
-//     uint8_t decimal_count;    //This is how many digits are written
+void PrintUnsignedDecimal (uint16_t number, uint8_t action) {
+    char temphex[5];        //Define the array that will hold the ASCII values
+    uint8_t i;                //Use this as a counter
+    uint16_t j=0;
+    uint8_t decimal_count;    //This is how many digits are written
 
-//     /* USE SPRINT F TO BUILD THE ARRAY OF ASCII CHARACTERS */
-//     decimal_count = sprintf(temphex, "%u", number); //u tells the function we want an unsigned decimal number
+    /* USE SPRINT F TO BUILD THE ARRAY OF ASCII CHARACTERS */
+    decimal_count = sprintf(temphex, "%u", number); //u tells the function we want an unsigned decimal number
 
-//     for(i = 0; i < decimal_count; i++) {    //Print out the array of ASCII characters.
-//         TXREG1 = (temphex[i]);
-//         TXWait();
-//     }
+    for(i = 0; i < decimal_count; i++) {    //Print out the array of ASCII characters.
+        TXREG1 = (temphex[i]);
+        TXWait();
+    }
 
-//     /* CHECK TO SEE IF THE USER WISHES TO CREATE A NEW LINE */
-//     if(action == LF) {
-//         TXREG1 = '\r';      //Return the cursor
-//         TXWait();
-//         TXREG1 = '\n';      //Put us on a new line -- must be in this order...
-//         TXWait();
-//     }
-//         else if(action == CR) {
-//             TXREG1 = '\r';      //Return cursor only
-//             TXWait();
-//         }
-// }
+    /* CHECK TO SEE IF THE USER WISHES TO CREATE A NEW LINE */
+    if(action == LF) {
+        TXREG1 = '\r';      //Return the cursor
+        TXWait();
+        TXREG1 = '\n';      //Put us on a new line -- must be in this order...
+        TXWait();
+    }
+        else if(action == CR) {
+            TXREG1 = '\r';      //Return cursor only
+            TXWait();
+        }
+}
 
 // void PrintLargeDecimal(DWORD number, uint8_t action){
 //     char temphex[8];        //Define the array that will hold the ASCII values

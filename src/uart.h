@@ -133,6 +133,15 @@ void ResetRxBuffer( void );
 ********************************************************/
 void TXmessage(const char *y);
 
+/********************************************************
+*FUNCTION: void PrintUnsignedDecimal (uint16_t number, uint8_t action)
+*PURPOSE: Print an unsigned decimal value
+*PRECONDITION: None
+*POSTCONDITION: Unsigned decimal value should be printed
+*RETURN: Nothing
+********************************************************/
+void PrintUnsignedDecimal (uint16_t number, uint8_t action);
+
 // /********************************************************
 // *FUNCTION: void UARTRead( void )
 // *PURPOSE: Read the BYTE stored in the UART buffer
@@ -142,14 +151,6 @@ void TXmessage(const char *y);
 // ********************************************************/
 // void UARTRead( void );
 
-// /********************************************************
-// *FUNCTION: void PrintUnsignedDecimal (uint16_t number, uint8_t action)
-// *PURPOSE: Print an unsigned decimal value
-// *PRECONDITION: None
-// *POSTCONDITION: Unsigned decimal value should be printed
-// *RETURN: Nothing
-// ********************************************************/
-// void PrintUnsignedDecimal (uint16_t number, uint8_t action);
 
 // /********************************************************
 // *FUNCTION: void PrintLargeDecimal (DWORD number, uint8_t action)

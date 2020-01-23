@@ -30,7 +30,7 @@ extern struct GlobalInformation         //Structure to pass information that is 
     uint8_t     next_disp_update;       // When tick1000ms matches this value, update the display again
     uint8_t     next_disp_shtdn;        // When tick1000ms matches this value, turn display backlight off
     
-    /* COUNTER RELATED */
+    /* Counter Related */
     uint16_t    tick20ms;               // Counts 0-4, resets every 100ms. 
     uint16_t    tick100ms;              // Counts 0-4, resets every 500ms.  
     uint16_t    tick500ms;              // Counts 0-1, resets every 1000ms.  
@@ -41,7 +41,7 @@ extern struct GlobalInformation         //Structure to pass information that is 
     bool        flag500ms;
     bool        flag1000ms;
 
-    /* BUTTON RELATED */
+    /* Button Related */
     uint8_t     up_btn_press_ctr;
     uint8_t     lo_btn_press_ctr;
     uint8_t     btn_both_press_ctr;
