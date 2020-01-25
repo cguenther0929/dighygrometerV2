@@ -154,10 +154,10 @@ void ResetRxBuffer( void ) {
 }
 
 void PrintUnsignedDecimal (uint16_t number, uint8_t action) {
-    char temphex[5];        //Define the array that will hold the ASCII values
-    uint8_t i;                //Use this as a counter
+    char temphex[5];            // Define the array that will hold the ASCII values
+    uint8_t i;                  // Use this as a counter
     uint16_t j=0;
-    uint8_t decimal_count;    //This is how many digits are written
+    uint8_t decimal_count;      // This is how many digits are written
 
     /* USE SPRINT F TO BUILD THE ARRAY OF ASCII CHARACTERS */
     decimal_count = sprintf(temphex, "%u", number); //u tells the function we want an unsigned decimal number
