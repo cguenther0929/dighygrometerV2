@@ -219,12 +219,12 @@ void GetNewDisplayRefreshTime ( void ) {
 
 void GetNewDisplayShtdnTime( void ) {
     if((gblinfo.tick1000ms + SECONDS_DISP_BACKLIGHT_ON)) {
-        gblinfo.next_disp_update = (gblinfo.tick1000ms + SECONDS_DISP_BACKLIGHT_ON) - 59;             // Case where timer needs to roll over
+        gblinfo.next_disp_shtdn = (gblinfo.tick1000ms + SECONDS_DISP_BACKLIGHT_ON) - 59;             // Case where timer needs to roll over
     }
 
     else {
-        gblinfo.next_disp_update = (gblinfo.tick1000ms + SECONDS_DISP_BACKLIGHT_ON);
-        if(gblinfo.next_disp_update > 59) gblinfo.next_disp_update = SECONDS_DISP_BACKLIGHT_ON;       // Cath possible concurrency issue here
+        gblinfo.next_disp_shtdn = (gblinfo.tick1000ms + SECONDS_DISP_BACKLIGHT_ON);
+        if(gblinfo.next_disp_shtdn > 59) gblinfo.next_disp_shtdn = SECONDS_DISP_BACKLIGHT_ON;       // Cath possible concurrency issue here
 
     }
 

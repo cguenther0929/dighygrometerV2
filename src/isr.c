@@ -112,14 +112,13 @@ __interrupt (low_priority) void main_isr( void ) {
                 gblinfo.flag500ms = true;
                 
                 if(gblinfo.tick500ms >= 1) {         //We've ticked away one second
-
                     gblinfo.tick500ms = 0;           //Reset seconds counter
                     gblinfo.flag1000ms = true;
                     
                     if(gblinfo.tick1000ms >= 59) 
                         gblinfo.tick1000ms = 0;
                     else
-                        gblinfo.tick1000ms = 0;
+                        gblinfo.tick1000ms++;
                 
                 }   
                 

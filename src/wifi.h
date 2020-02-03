@@ -61,14 +61,25 @@ extern struct WifiInformation         //Structure to pass information that is sh
 #define WIFI_ROUTER_SSID                    "\"CJG_GbE_2G4\""
 #define WIFI_ROUTER_PASSWORD                "\"GlockHK23\""
 
-#define ESP_CIPMUX_BASE_CMD                 "CIPMUX=1"
-#define ESP_CIPMUX_SINGLE_CONNECTION        "0"         // Must be strings
+#define ESP_CIPMUX_BASE_CMD                 "AT+CIPMUX="
+#define ESP_CIPMUX_SINGLE_CONNECTION        "0"         
 #define ESP_CIPMUX_MULTIPLE_CONNECTION      "1"
 
 #define ESP_AP_OR_CLIENT_BASE_CMD           "AT+CWMODE="
 #define ESP_CLIENT_MODE                     "1"
 #define ESP_AP_MODE                         "2"
 #define ESP_AP_AND_CLIENT_MODE              "3"
+
+#define ESP_KILL_WIFI_CONNECTION_CMD        "AT+CWQAP"
+
+#define ESP_RESET_MODULE_CMD                "AT+RST"
+
+#define ESP_SERVER_BASE_CMD                 "AT+CIPSERVER="
+#define ESP_CLOSE_SERVER                    "0"
+#define ESP_OPEN_SERVER                     "1"
+#define ACTION_CLOSE_SERVER_SOCKET          0
+#define ACTION_OPEN_SERVER_SOCKET           1
+
 
 
 /*
@@ -82,7 +93,13 @@ extern struct WifiInformation         //Structure to pass information that is sh
  */
 bool SetEspCipmuxMode (const char * mode);
 
-bool SetEspConnectionMode (const char * mode);  //TODO comment set mode (i.e. access point)
+bool EspApOrClientMode (const char * mode);  //TODO comment set mode (i.e. access point)
+
+bool DisconnectWifiConnection( void );
+
+void ResetEsp( void ); //TODO comment
+
+bool EspServerMode (uint8_t action, const char * port_number);  //TODO comments
 
 /*
  * Function: bool JoinNetwork (const char * ssid, const char * password)
@@ -96,10 +113,8 @@ bool SetEspConnectionMode (const char * mode);  //TODO comment set mode (i.e. ac
 bool JoinNetwork (const char * ssid, const char * password);
 
 
-// TODO comment
-bool SendEmail (const char * msg, const char * val);
 
-bool MakeSmtpConnection( void ); //TODO comment
+bool SendEmail( void ); //TODO comment
 
 void GetAssignedIpAddress ( void );
 

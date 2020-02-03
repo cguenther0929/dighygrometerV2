@@ -92,6 +92,10 @@ void tick100msDelay( uint16_t ticks );
  */
 void tick20msDelay( uint16_t ticks );
 
+/*TODO need to comment*/
+void ClockPulseDelay (uint8_t clk_pulses);
+
+
 /*
  * Function:  void SetUp( void );
  * --------------------

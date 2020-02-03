@@ -19,18 +19,18 @@ struct GlobalInformation sysinfo;
 void SPI1Init( void ){  
     
     /* CONFIGURE SSP1STAT REGISTER */
-    SMP1 = 0;           // Input data is sampled at the middle of data output time
-    CKE1 = 1;           // Transmit occurs on the transition from active to idle clock app_state 
+    SMP1 = 0;                               // Input data is sampled at the middle of data output time
+    CKE1 = 1;                               // Transmit occurs on the transition from active to idle clock app_state 
     
     /* CONFIGURE SSP1CON1 p282 */
-    CKP1 = 0;                            // Idle clock app_state is low (default value)
-    // SSPCON1bits.SSPM = 0x0;             // 0b0000 SPI Master mode: clock = FOSC/4
-    SSPCON1bits.SSPM = 0x1;          // 0b0001 SPI Master mode: clock = FOSC/16
-    // SSPCON1bits.SSPM = 0x2;          // 0b0010 SPI Master mode: clock = FOSC/64
-    // SSPCON1bits.SSPM = 0x3;          // 0b0011 Master mode: clock = TMR2 output/2
-    // SSPCON1bits.SSPM = 0xA;          // 0b1001 SPI Master mode: clock = FOSC/8
+    CKP1 = 0;                               // Idle clock app_state is low (default value)
+    // SSPCON1bits.SSPM = 0x0;              // 0b0000 SPI Master mode: clock = FOSC/4
+    SSPCON1bits.SSPM = 0x1;                 // 0b0001 SPI Master mode: clock = FOSC/16
+    // SSPCON1bits.SSPM = 0x2;              // 0b0010 SPI Master mode: clock = FOSC/64
+    // SSPCON1bits.SSPM = 0x3;              // 0b0011 Master mode: clock = TMR2 output/2
+    // SSPCON1bits.SSPM = 0xA;              // 0b1001 SPI Master mode: clock = FOSC/8
 
-    SSPEN1 = 1;          // Enable SPI communication via bit in SSP1CON1 register p283
+    SSPEN1 = 1;                             // Enable SPI communication via bit in SSP1CON1 register p283
 }
 
 void SPI2Init( void ){ 
@@ -190,8 +190,8 @@ void DispSPI1Write(uint8_t data) {
     rcvd_data = SSP1BUF;                // Read the buffer to assure it is empty and BF is cleared
 
     /* SEND DATA */
-    WCOL2 = 0;
-    SSPOV2 = 0;
+    WCOL1 = 0;
+    SSPOV1 = 0;
     SSP1BUF = data;                     // Send the instruction
    
     while(BF1 != 1);                    // Wait until data is in the buffer (received)

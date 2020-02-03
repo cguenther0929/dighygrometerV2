@@ -39,9 +39,8 @@
 /* DEFINITIONS RELATED TO DISPLAY */
 // #warning "Display update time shall be >> than display backlight time!"
 
-#define MAX_DISP_DWELL                      5               // Max amount of time (in seconds) display is allowed to be ON  <-- TODO remove is no longer needed 
-#define SECONDS_BETWEEN_DISP_UPDATE         10              // Amount of time (in seconds) that will pass between display updates            
-#define SECONDS_DISP_BACKLIGHT_ON           3               // Amount of time (in seconds) that the display backlight will be on once enabled
+#define SECONDS_BETWEEN_DISP_UPDATE         5               // Amount of time (in seconds) that will pass between display updates            
+#define SECONDS_DISP_BACKLIGHT_ON           1               // Amount of time (in seconds) that the display backlight will be on once enabled
 
 /* Processor defines for I2C sensor */
 #define SEL_SENSOR2_BIT                     LATDbits.LATD7
@@ -66,7 +65,7 @@
 #define BUTTON_DEBOUNCE_TICKS               (uint8_t)(BUTTON_DEBOUNCE_TIME/0.02)
 
 /* Defines for state machine */
-#define SENSOR_REFRESH_RATE_SECONDS
+#define SENSOR_REFRESH_RATE_SECONDS         1
 #define COUNTS_20MS_BETWEEN_SENSOR_UPDATE   (uint8_t)(SENSOR_REFRESH_RATE_SECONDS/0.02)
 
 /* DEFINE VARIOUS PIN FUNCTIONS */

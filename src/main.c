@@ -83,22 +83,26 @@ Disp_Actions disp_actions = DISP_TMR_DISABLE;
 void main()
 {
     SetUp();
+    DispInit();
 
     PrintSplashScreen();
 
+    GetNewDisplayRefreshTime();
+    GetNewDisplayShtdnTime();
+    
     while (true) {
         if(gblinfo.flag20ms) {
             gblinfo.flag20ms = false;
-            EvaluateButtonInputs();
-            EvaluateState();
+            EvaluateButtonInputs(); //TODO need to put this back in
+            EvaluateState();     //TODO need to put this back in
         }
 
         if(gblinfo.flag100ms) {
             gblinfo.flag100ms = false;
-            
+
             if(gblinfo.tick1000ms == gblinfo.next_disp_update){
                 GetNewDisplayRefreshTime( );
-                app_state       = UPDATE_DISPLAY;
+                app_state       = UPDATE_DISPLAY;        //TODO put this back in
             }
             
             if(gblinfo.tick1000ms == gblinfo.next_disp_shtdn){
@@ -113,7 +117,7 @@ void main()
 
         if(gblinfo.flag1000ms) {
             gblinfo.flag1000ms = false;
-            health_led = ~health_led;
+            health_led = ~health_led;  
         }
 
     }
@@ -121,27 +125,6 @@ void main()
 }   //END Main()
 
 
-void tick100msDelay(uint16_t ticks)
-{
-    uint16_t i = 0;
-    uint16_t tick = 0; //Used to lock time value
-    for (i = ticks; i > 0; i--)
-    {
-        tick = gblinfo.tick100ms;
-        while (tick == gblinfo.tick100ms); //Wait for time to wrap around (in one half tick1000mond)
-    }
-}
-
-void tick20msDelay(uint16_t ticks)
-{
-    uint16_t i = 0;
-    uint16_t tick = 0; //Used to lock time value
-    for (i = ticks; i > 0; i--)
-    {
-        tick = gblinfo.tick20ms;
-        while (tick == gblinfo.tick20ms); //Wait for time to wrap around (in one half tick1000mond)
-    }
-}
 
 
 void PrintSplashScreen( void ) {
@@ -170,9 +153,11 @@ void EvaluateState( void ) {
     switch(app_state) {
         case STATE_IDLE:
 
-            // if(gblinfo.tick20msloopctr >= COUNTS_20MS_BETWEEN_SENSOR_UPDATE)
-            if(gblinfo.tick20msloopctr >= 10)
+            // if(gblinfo.tick20msloopctr >= COUNTS_20MS_BETWEEN_SENSOR_UPDATE) //TODO I think we want to put this back in
+            if(gblinfo.tick20msloopctr >= 50){
                 app_state = STATE_GRAB_SENSOR_DATA;
+                gblinfo.tick20msloopctr = 0;
+            }
             else
                 gblinfo.tick20msloopctr++;
              
@@ -197,18 +182,22 @@ void EvaluateState( void ) {
         
             SelectSensor(SELECT_SENSOR_1);
             tick20msDelay(1);
-            temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_HUM_HOLD_MASTER);
+            // temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_HUM_HOLD_MASTER);       //TODO put this line in
+            temp_data = 1200;   //TODO take this line out
             gblinfo.rh_value_1 = (float)((125.0 * temp_data / 65536) - 6 + gblinfo.rh_offset_1);
 
-            temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_TMP_PREV_RH_MEAS);
+            // temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_TMP_PREV_RH_MEAS);      //TODO put this line in
+            temp_data = 1200;       //TODO take this line out
             gblinfo.temp_value_1 = (uint8_t)((temp_data / 207.1952) - 52.24);             // Units in deg C
 
             SelectSensor(SELECT_SENSOR_2);
             tick20msDelay(1);
-            temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_HUM_HOLD_MASTER);
+            temp_data = 1200;       //TODO remove
+            // temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_HUM_HOLD_MASTER);   //TODO put this line in
             gblinfo.rh_value_2 = (float)((125.0 * temp_data / 65536) - 6 + gblinfo.rh_offset_2);
 
-            temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_TMP_PREV_RH_MEAS);
+            // temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_TMP_PREV_RH_MEAS);  //TODO put this line back int
+            temp_data = 1200;
             gblinfo.temp_value_2 = (uint8_t)((temp_data / 207.1952) - 52.24);             // Units in deg C
         
         break;
@@ -251,14 +240,24 @@ void EvaluateState( void ) {
             app_state = STATE_IDLE;
             break;
         
-        case STATE_MAKE_NETWORK_CONNECTION:
-            SetEspConnectionMode(ESP_CIPMUX_MULTIPLE_CONNECTION);
+        case STATE_MAKE_NETWORK_CONNECTION:   //TODO we may need to change the order of things a bit
+            EspApOrClientMode(ESP_CLIENT_MODE);
             tick20msDelay(5);
 
+            DisconnectWifiConnection( ); //Kill any existing connections first
+            tick20msDelay(5);
+
+            ResetEsp( );
+            tick100msDelay(50);
+
+            JoinNetwork(WIFI_ROUTER_SSID, WIFI_ROUTER_PASSWORD);
+            tick20msDelay(5);
+            
+            // SetEspCipmuxMode(ESP_CIPMUX_SINGLE_CONNECTION);
             SetEspCipmuxMode(ESP_CIPMUX_MULTIPLE_CONNECTION);
             tick20msDelay(5);
 
-            JoinNetwork(WIFI_ROUTER_SSID, WIFI_ROUTER_PASSWORD);
+            EspServerMode (ACTION_OPEN_SERVER_SOCKET,"80");
             tick20msDelay(5);
 
             app_state = STATE_IDLE;
@@ -369,7 +368,7 @@ void SetUp(void)
 
     /* PIN DIRECTION FOR DISPLAY AND EXTERNAL SPI */
     TRISB4 = output;                    // Active low output enables display
-    TRISC0 = output;                    // Register select ling to Display
+    TRISC0 = output;                    // Register select line to Display
     TRISC1 = output;                    // Display reset signal
     TRISC2 = output;                    // Display SPI chip select signal
     TRISC3 = output;                    // Display SPI SCK signal
@@ -477,6 +476,36 @@ void SetUp(void)
     /* TIMER FOR APPLICATION INTERRUPTS */
     Timer0Init(TMR0_INTUP_SETTING, TMR0_PRESCALER, TMR0_FSOC_DIV_BY_4); //ARGS: interrupts, prescaler, clksource = FOSC/4
     Timer0On();
+
+}
+
+void tick100msDelay(uint16_t ticks)
+{
+    uint16_t i = 0;
+    uint16_t tick = 0; //Used to lock time value
+    for (i = ticks; i > 0; i--)
+    {
+        tick = gblinfo.tick100ms;
+        while (tick == gblinfo.tick100ms); //Wait for time to wrap around (in one half tick1000mond)
+    }
+}
+
+void tick20msDelay(uint16_t ticks)
+{
+    uint16_t i = 0;
+    uint16_t tick = 0; //Used to lock time value
+    for (i = ticks; i > 0; i--)
+    {
+        tick = gblinfo.tick20ms;
+        while (tick == gblinfo.tick20ms); //Wait for time to wrap around (in one half tick1000mond)
+    }
+}
+
+void ClockPulseDelay (uint8_t clk_pulses) {
+    uint8_t i;
+    for(i=0; i<clk_pulses; i++) {
+        NOP();
+    }
 
 }
 /* END OF FILE */
