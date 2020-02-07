@@ -28,23 +28,22 @@ void EnableUart1Interrupts( uint8_t RECEIVE_PRIORITY ) {
 void SetUpUART( void ) {
 
     /* RCSTA (RECEIVE STATUS AND CONTROL REGISTER) SETTINGS */
-    SPEN1 = 1;          //This will enable the serial port pins see datasheet 199/380
+    SPEN1 = 1;              //This will enable the serial port pins see datasheet 199/380
     TRISC7 = input;         //Make the MCU RXD pin an input -- see datasheet 199/380
-    TRISC6 = output;         //Make the MCU TXD pin an output -- see datasheet 199/380
+    TRISC6 = output;        //Make the MCU TXD pin an output -- see datasheet 199/380
 
     /* TXSTA CONTROL REGISTER SETTINGS -- SEE PAGE 200/380 */
-    SYNC1 = 0;           //Set the module up for asynchronous communication
-    CSRC1 = 1;           //Clock generated internally from BAUD Rate Generator
-    TXEN1 = 1;           //Enable the transmitter
-    //BRGH1 = 0;         //When set to zero, equation is (FOSC/(DESIRED BAUD * 64)) - 1
-    BRGH1 = 1;           //When set to one, equation is (FOSC/(DESIRED BAUD * 16)) - 1
+    SYNC1 = 0;              // Set the module up for asynchronous communication
+    CSRC1 = 1;              // Clock generated internally from BAUD Rate Generator
+    TXEN1 = 1;              // Enable the transmitter
+    BRGH1 = BRGH_BIT;       
 
     /* RCSA CONTROL REGISTER SETTINGS -- SEE PAGE 201/380 */
-    SPEN1 = 1;           //Map port pins to the USART module
-    CREN1 = 1;           //This enables the receiver
+    SPEN1 = 1;              // Map port pins to the USART module
+    CREN1 = 1;              // This enables the receiver
 
     /* SET UP THE BAUD RATE GENERATOR -- FORMULA ON PAGE 202/380 */
-    SPBRG1 = 19;      //57600bps when using a 18.432MHz oscillator 
+    SPBRG1 = BRGH_VAL;      
 
 }
 
@@ -72,10 +71,18 @@ void PrintUARTBuffer ( void ){
 
     DispRefresh();
     while(uart.data_count > 0 ){
-        DispWriteChar(uart.rxbuf[uart.old_byte]);
-        (uart.old_byte >= MAX_BUFFER) ? (uart.old_byte = 0):(uart.old_byte++);
-        uart.data_count--;
-        char_count++;
+        if(uart.rxbuf[uart.old_byte] != 0x0a || uart.rxbuf[uart.old_byte] != 0x0d) {
+
+            DispWriteChar(uart.rxbuf[uart.old_byte]);
+            (uart.old_byte >= MAX_BUFFER) ? (uart.old_byte = 0):(uart.old_byte++);
+            uart.data_count--;
+            char_count++;
+        }
+        else {
+            (uart.old_byte >= MAX_BUFFER) ? (uart.old_byte = 0):(uart.old_byte++);
+            uart.data_count--;
+            char_count++;
+        }
         
         if(char_count >= 16) {
             DispLineTwo ();
@@ -100,9 +107,11 @@ void PrintUARTString (const char * y, uint8_t action ) {
 
     /* CHECK TO SEE IF THE USER WISHES TO CREATE A NEW LINE */
     if(action == LF) {
+        // TXREG1 = 0x0d;       //Return the cursor
         TXREG1 = '\r';      //Return the cursor
         TXWait();
-        TXREG1 = '\n';      //Put us on a new line -- must be in this order...
+        // TXREG1 = 0x0a;      //Put us on a new line -- must be in this order...
+        TXREG1 = '\n';          //Put us on a new line -- must be in this order...
         TXWait();
     }
     else if(action == CR) {
@@ -126,9 +135,9 @@ void TXmessage(const char *y){
 void PrintLineSpaces( uint8_t spaces ) {
     uint16_t i = 0;         //Use this as a counter
 	for(i=0;i<spaces;i++) {
-		TXREG1 = '\r';      //Return the cursor
+		TXREG1 = '\r';      // Return the cursor
 		TXWait();
-		TXREG1 = '\n';      //Put us on a new line - - Must be in this order...
+		TXREG1 = '\n';      // Put us on a new line - - Must be in this order...
 		TXWait();
 	}
 }

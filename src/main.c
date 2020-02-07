@@ -129,7 +129,7 @@ void main()
 
 void PrintSplashScreen( void ) {
 
-    DispSetContrast(60);
+    DispSetContrast(30);
     DispWtLnOne("Digital");
     DispWtLnTwo("Hygrometer");
     tick100msDelay(15);
@@ -204,7 +204,6 @@ void EvaluateState( void ) {
 
         case UPDATE_DISPLAY:
             DISP_ENABLE = DISPLAY_ON;
-            GetNewDisplayShtdnTime( );
             
             DispRefresh();      // Puts cursor on line one, too
             DispWriteString("T1:"); PrintDecimalNumber((uint16_t) gblinfo.temp_value_1); DispWriteString("  ");
@@ -214,6 +213,7 @@ void EvaluateState( void ) {
             DispWriteString("T2:"); PrintDecimalNumber((uint16_t) gblinfo.temp_value_2); DispWriteString("  ");
             DispWriteString("H2:"); PrintDecimalNumber((uint16_t) gblinfo.rh_value_2);
 
+            GetNewDisplayShtdnTime( );
             app_state = STATE_IDLE;
         break;
 
@@ -241,10 +241,17 @@ void EvaluateState( void ) {
             break;
         
         case STATE_MAKE_NETWORK_CONNECTION:   //TODO we may need to change the order of things a bit
-            EspApOrClientMode(ESP_CLIENT_MODE);
-            tick20msDelay(5);
+            
+            DispRefresh();
+            DispWtLnOne("Net Connect");
+            tick20msDelay(50);
 
-            DisconnectWifiConnection( ); //Kill any existing connections first
+            EspCommCheck();
+            
+            EspApOrClientMode(ESP_CLIENT_MODE);
+            tick20msDelay(1);
+
+            DisconnectWifiConnection( );        //Kill any existing connections first
             tick20msDelay(5);
 
             ResetEsp( );
@@ -259,6 +266,8 @@ void EvaluateState( void ) {
 
             EspServerMode (ACTION_OPEN_SERVER_SOCKET,"80");
             tick20msDelay(5);
+
+            GetNewDisplayRefreshTime( );
 
             app_state = STATE_IDLE;
             break;
@@ -448,6 +457,10 @@ void SetUp(void)
 
     /* TURN OFF THE DISPLAY */
     DISP_ENABLE = DISPLAY_OFF;
+
+    /* WiFi Reset and Enable Lines High */
+    WIFI_RESET  = 1;
+    WIFI_ENABLE = 1;
 
     /* SETUP INTERRUPTS */
     Init_Interrupts();

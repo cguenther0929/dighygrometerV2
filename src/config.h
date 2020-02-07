@@ -37,8 +37,6 @@
 #define BUGVER                  0x00
 
 /* DEFINITIONS RELATED TO DISPLAY */
-// #warning "Display update time shall be >> than display backlight time!"
-
 #define SECONDS_BETWEEN_DISP_UPDATE         5               // Amount of time (in seconds) that will pass between display updates            
 #define SECONDS_DISP_BACKLIGHT_ON           1               // Amount of time (in seconds) that the display backlight will be on once enabled
 
@@ -47,13 +45,17 @@
 #define SELECT_SENSOR_1                     0
 #define SELECT_SENSOR_2                     1
 
-/* PIN DEFINES FOR LCD SCREEN */    //TODO has been updated
+/* Processor defines for WiFi Module */
+#define WIFI_ENABLE                         LATAbits.LATA0
+#define WIFI_RESET                          LATAbits.LATA1
+
+/* PIN DEFINES FOR LCD SCREEN */    
 #define DISP_ENABLE                         LATBbits.LATB4          // Active low signal for turning on display
 #define DISP_RESET                          LATCbits.LATC1          // Active low signal to reset the display
 #define DISP_REG_SEL                        LATCbits.LATC0          // Register select signal. 0 = instruction, 1 = data
 #define DISP_SPI_CS                         LATCbits.LATC2          // Display Chip Select Signal 
 
-/* DEFINES FOR LED PINS */  //TODO has been updated
+/* DEFINES FOR LED PINS */  
 #define health_led                          LATBbits.LATB5          // For driving health LED  
 
 /* DEFINES FOR PUSH BUTTONS */      //TODO has been updated

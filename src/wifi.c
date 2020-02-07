@@ -13,15 +13,42 @@
 struct UARTMembers  uart;
 struct WifiInformation wifi;
 
+bool EspCommCheck ( void ) {
+    
+    ResetRxBuffer();
+    
+    // PrintUARTString(ESP_AT_COMM_CHECK,LF);
+    PrintUARTString("AT\r\n",0);        //TODO this doesn't appear to work
+    tick20msDelay(10);    
+    
+    PrintUARTBuffer();                  // TODO for debugging only
+    tick20msDelay(100);                 // TODO we can remove this line
+
+    DispRefresh();
+    DispWtLnOne("COM CHK DONE");
+    tick20msDelay(100);     //TODO we can remove this line
+    
+    ResetRxBuffer();
+    
+    return true;
+}
+
+
 bool EspApOrClientMode (const char * mode) {
     char temp_string[64]; 
+    
+    ResetRxBuffer();
     
     strcat(temp_string, ESP_AP_OR_CLIENT_BASE_CMD);
     strcat(temp_string, mode);
 
     PrintUARTString(temp_string,LF);
+    tick20msDelay(2);
     
     PrintUARTBuffer();                  //TODO for debugging only
+    tick20msDelay(100);     //TODO we can remove this line
+    
+    ResetRxBuffer();
 
     return true;
 }
@@ -37,8 +64,12 @@ bool SetEspCipmuxMode (const char * mode) {
     strcat(temp_string, mode);
     
     PrintUARTString(temp_string,LF);
+    tick20msDelay(2);
+    
     PrintUARTBuffer();                  //TODO for debugging only
+    tick20msDelay(50);
 
+    ResetRxBuffer();
     return true;
 }
 
@@ -102,6 +133,7 @@ uint8_t GetLengthIpAddress ( void ) {
 bool DisconnectWifiConnection( void ) {
     
     PrintUARTString(ESP_KILL_WIFI_CONNECTION_CMD,LF);
+    tick20msDelay(5);
     return true;
 
 }
@@ -112,6 +144,8 @@ void ResetEsp( void ) {
 
 bool JoinNetwork (const char * ssid, const char * password) {
     char temp_string[64]; 
+
+    ResetRxBuffer();
     
     strcat(temp_string, ESP_JOIN_NETWORK_BASE_CMD);
     strcat(temp_string, ssid);
@@ -121,7 +155,9 @@ bool JoinNetwork (const char * ssid, const char * password) {
     
     PrintUARTString(temp_string,LF);
     PrintUARTBuffer();                  //TODO for debugging only
-
+    tick20msDelay(50);
+    
+    ResetRxBuffer();
     return true;
 }
 

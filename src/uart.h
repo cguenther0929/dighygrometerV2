@@ -24,9 +24,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>      
-#include <string.h>     //Needed mainly for memcpy function
-#include "config.h"     //Project specific header file
-#include "disp.h"     //Project specific header file
+#include <string.h>     // Needed mainly for memcpy function
+#include "config.h"     // Project specific header file
+#include "disp.h"       // Project specific header file
 
 /* Message Buffer Sizes */
 #define MAX_BUFFER              20             				// Define max receive buffer size. 
@@ -34,12 +34,26 @@
 #define UART_TMOUT_MS           30					// Value is in ms.  As a reference, a 255bit message requires ~26ms @ 9600			
 #define TX_TMOUT_CNTS      	(uint16_t)(OSC_DIV4 * (UART_TMOUT_MS / 1000.0)) 	// FOSC/4 Counts.  Therefore counts = FOSC/4 * Timeout Value.  
 
+/* UART Baud Rate Setup */         
+#define BRGH_BIT                1                                       //  When one: When set to one, equation is (FOSC/(DESIRED BAUD * 16)) - 1, when zero: equation is (FOSC/(DESIRED BAUD * 64)) - 1, when zero: 
+#define BRGH_BIT_IS_ONE         1                                       // Comment this out if BRGH is 0!
+#define DESIRED_BAUD            115200
+
+#ifdef  BRGH_BIT_IS_ONE
+// #define BRGH_VAL                (uint8_t)((MCU_OSC_FRQ / DESIRED_BAUD / 16) - 1)             //TODO put this line back in.
+#define BRGH_VAL                3
+
+#else 
+#define BRGH_VAL                (uint8_t)((MCU_OSC_FRQ / DESIRED_BAUD / 64) - 1)
+
+#endif
+
 extern struct UARTMembers {
-    uint8_t rxchar;                   //Support this so that a PC can calibrate the unit
-	uint8_t rxbuf[MAX_BUFFER];
-	uint8_t new_byte;
-	uint8_t old_byte;
-	uint8_t data_count;
+        uint8_t rxchar;                   //Support this so that a PC can calibrate the unit
+        uint8_t rxbuf[MAX_BUFFER];
+        uint8_t new_byte;
+        uint8_t old_byte;
+        uint8_t data_count;
 }UARTMembers;
 
 /* CONTROL CHARACTERS */

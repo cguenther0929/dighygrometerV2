@@ -19,6 +19,7 @@
 #include <string.h>
 #include "struct.h"
 #include "main.h"
+#include "disp.h"
 
 extern struct WifiInformation         //Structure to pass information that is shared among modules
 {
@@ -49,6 +50,8 @@ extern struct WifiInformation         //Structure to pass information that is sh
  */
 #define LOGIN_PASSWORD_BASE64               "TUdINTY3JiooNDI0MjYy"
 #define LOGIN_PASSWORD_LENGTH               "22"
+
+#define ESP_AT_COMM_CHECK                   "AT"
 
 #define ESP_MAKE_TCP_CONN_BASE_CMD          "AT+CIPSTART=0"
 #define EMAIL_GMAIL_HOST_DOMAIN             "\"smtp.gmail.com\""
@@ -100,6 +103,8 @@ bool DisconnectWifiConnection( void );
 void ResetEsp( void ); //TODO comment
 
 bool EspServerMode (uint8_t action, const char * port_number);  //TODO comments
+
+bool EspCommCheck ( void ); //TODO comment
 
 /*
  * Function: bool JoinNetwork (const char * ssid, const char * password)
