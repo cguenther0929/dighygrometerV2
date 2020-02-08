@@ -27,6 +27,7 @@
 #include <string.h>     // Needed mainly for memcpy function
 #include "config.h"     // Project specific header file
 #include "disp.h"       // Project specific header file
+#include "main.h"
 
 /* Message Buffer Sizes */
 #define MAX_BUFFER              20             				// Define max receive buffer size. 
@@ -40,8 +41,8 @@
 #define DESIRED_BAUD            115200
 
 #ifdef  BRGH_BIT_IS_ONE
-// #define BRGH_VAL                (uint8_t)((MCU_OSC_FRQ / DESIRED_BAUD / 16) - 1)             //TODO put this line back in.
-#define BRGH_VAL                3
+#define BRGH_VAL                (uint8_t)((MCU_OSC_FRQ / DESIRED_BAUD / 16) - 1)             //TODO put this line back in.
+// #define BRGH_VAL                3
 
 #else 
 #define BRGH_VAL                (uint8_t)((MCU_OSC_FRQ / DESIRED_BAUD / 64) - 1)

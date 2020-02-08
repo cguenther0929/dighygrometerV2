@@ -96,6 +96,7 @@ extern struct WifiInformation         //Structure to pass information that is sh
  */
 bool SetEspCipmuxMode (const char * mode);
 
+
 bool EspApOrClientMode (const char * mode);  //TODO comment set mode (i.e. access point)
 
 bool DisconnectWifiConnection( void );

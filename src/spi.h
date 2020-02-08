@@ -23,7 +23,7 @@
 #include "timer.h"
 #include "main.h"
 
-#define spidelay        50             //Define a small delay
+#define spidelay        200             //Define a small delay
 
 
 /*

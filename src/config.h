@@ -19,7 +19,7 @@
 #include "struct.h"
 
 /* PREPROCESSOR CALCULATION TO DETERMINE TIMER4'S INCREMENT RATE */
-#define MCU_OSC_FRQ         8000000.0                  // Oscillator used for MCU
+#define MCU_OSC_FRQ         32000000.0                  // Oscillator used for MCU
 #define OSC_DIV4            (MCU_OSC_FRQ/4.0)          // Oscillator used for MCU
 
 /* REGISTER VALUES FOR 10MS TIME BASE */         

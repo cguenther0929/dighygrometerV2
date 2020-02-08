@@ -14,47 +14,47 @@
 
 // CONFIG1L
 #pragma config RETEN        = OFF      // VREG Sleep Enable bit (Disabled - Controlled by SRETEN bit)
-#pragma config INTOSCSEL    = HIGH // LF-INTOSC Low-power Enable bit (LF-INTOSC in High-power mode during Sleep)
-#pragma config SOSCSEL      = DIG    // SOSC Power Selection and mode Configuration bits (Digital (SCLKI) mode)
+#pragma config INTOSCSEL    = HIGH      // LF-INTOSC Low-power Enable bit (LF-INTOSC in High-power mode during Sleep)
+#pragma config SOSCSEL      = DIG       // SOSC Power Selection and mode Configuration bits (Digital (SCLKI) mode)
 #pragma config XINST        = OFF      // Extended Instruction Set (Disabled)
 
 // CONFIG1H
 #pragma config FOSC         = INTIO1    // Internal RC Oscillator with output on OSC2.  p45/550.
-#pragma config PLLCFG       = OFF     // PLL x4 Enable bit (Disabled)
-#pragma config FCMEN        = OFF      // Fail-Safe Clock Monitor (Disabled)
+#pragma config PLLCFG       = ON        // PLL x4 Enable bit (Enabled).  Works for internall oscialltor block, 
+#pragma config FCMEN        = OFF       // Fail-Safe Clock Monitor (Disabled)
 #pragma config IESO         = OFF       // Internal External Oscillator Switch Over Mode (Disabled)
 
 // CONFIG2L
-#pragma config PWRTEN       = ON      // Power Up Timer (Enabled)
-#pragma config BOREN        = SBORDIS  // Brown Out Detect (Enabled in hardware, SBOREN disabled)
+#pragma config PWRTEN       = ON        // Power Up Timer (Enabled)
+#pragma config BOREN        = SBORDIS   // Brown Out Detect (Enabled in hardware, SBOREN disabled)
 #pragma config BORV         = 1         // Brown-out Reset Voltage bits (2.7V)
-#pragma config BORPWR       = ZPBORMV // BORMV Power level (ZPBORMV instead of BORMV is selected)
+#pragma config BORPWR       = ZPBORMV   // BORMV Power level (ZPBORMV instead of BORMV is selected)
 
 // CONFIG2H
-#pragma config WDTEN        = OFF      // Watchdog Timer Disabled in HW
-#pragma config WDTPS        = 1024     // Watchdog Postscaler (1:1024)
+#pragma config WDTEN        = OFF       // Watchdog Timer Disabled in HW
+#pragma config WDTPS        = 1024      // Watchdog Postscaler (1:1024)
 
 // CONFIG3L
-#pragma config RTCOSC       = SOSCREF // RTCC Clock Select (RTCC uses SOSC)
+#pragma config RTCOSC       = SOSCREF   // RTCC Clock Select (RTCC uses SOSC)
 
 // CONFIG3H
-#pragma config CCP2MX       = PORTC   // CCP2 Mux (RC1)
-#pragma config MSSPMSK      = MSK7   // MSSP address masking (7 Bit address masking mode)
-#pragma config MCLRE        = ON       // Master Clear Enable (MCLR Enabled, RG5 Disabled)
+#pragma config CCP2MX       = PORTC     // CCP2 Mux (RC1)
+#pragma config MSSPMSK      = MSK7      // MSSP address masking (7 Bit address masking mode)
+#pragma config MCLRE        = ON        // Master Clear Enable (MCLR Enabled, RG5 Disabled)
 
 // CONFIG4L
-#pragma config STVREN       = ON      // Stack Overflow Reset (Enabled)
-#pragma config BBSIZ        = BB2K     // Boot Block Size (2K word Boot Block size)
+#pragma config STVREN       = ON        // Stack Overflow Reset (Enabled)
+#pragma config BBSIZ        = BB2K      // Boot Block Size (2K word Boot Block size)
 
 // CONFIG5L
-#pragma config CP0          = OFF        // Code Protect 00800-03FFF (Disabled)
-#pragma config CP1          = OFF        // Code Protect 04000-07FFF (Disabled)
-#pragma config CP2          = OFF        // Code Protect 08000-0BFFF (Disabled)
-#pragma config CP3          = OFF        // Code Protect 0C000-0FFFF (Disabled)
+#pragma config CP0          = OFF       // Code Protect 00800-03FFF (Disabled)
+#pragma config CP1          = OFF       // Code Protect 04000-07FFF (Disabled)
+#pragma config CP2          = OFF       // Code Protect 08000-0BFFF (Disabled)
+#pragma config CP3          = OFF       // Code Protect 0C000-0FFFF (Disabled)
 
 // CONFIG5H
-#pragma config CPB          = OFF        // Code Protect Boot (Disabled)
-#pragma config CPD          = OFF        // Data EE Read Protect (Disabled)
+#pragma config CPB          = OFF       // Code Protect Boot (Disabled)
+#pragma config CPD          = OFF       // Data EE Read Protect (Disabled)
 
 // CONFIG6L
 #pragma config WRT0         = OFF       // Table Write Protect 00800-03FFF (Disabled)
@@ -248,24 +248,26 @@ void EvaluateState( void ) {
 
             EspCommCheck();
             
-            EspApOrClientMode(ESP_CLIENT_MODE);
-            tick20msDelay(1);
+            // EspApOrClientMode(ESP_CLIENT_MODE);
+            // tick20msDelay(1);
 
-            DisconnectWifiConnection( );        //Kill any existing connections first
-            tick20msDelay(5);
+            // DisconnectWifiConnection( );        //Kill any existing connections first
+            // tick20msDelay(5);
 
-            ResetEsp( );
-            tick100msDelay(50);
+            // ResetEsp( );
+            // tick100msDelay(50);
 
             JoinNetwork(WIFI_ROUTER_SSID, WIFI_ROUTER_PASSWORD);
-            tick20msDelay(5);
+            tick100msDelay(50);
             
             // SetEspCipmuxMode(ESP_CIPMUX_SINGLE_CONNECTION);
-            SetEspCipmuxMode(ESP_CIPMUX_MULTIPLE_CONNECTION);
-            tick20msDelay(5);
+            // SetEspCipmuxMode(ESP_CIPMUX_MULTIPLE_CONNECTION);
+            // tick20msDelay(5);
 
-            EspServerMode (ACTION_OPEN_SERVER_SOCKET,"80");
-            tick20msDelay(5);
+            // EspServerMode (ACTION_OPEN_SERVER_SOCKET,"80");
+            // tick20msDelay(5);
+
+            GetAssignedIpAddress( );    
 
             GetNewDisplayRefreshTime( );
 
@@ -366,6 +368,14 @@ void EvaluateButtonInputs ( void ) {
 
 void SetUp(void)
 {
+    uint16_t i;
+    
+    /* Oscillator Frequency Switch */
+    PLLEN = 1;
+    for(i=0; i<500; i++);
+    while(!MFIOFS);             // Watch the internal osciallator stable bit
+    for(i=0; i<500; i++);
+    
     app_state = STATE_IDLE;
 
     /* PIN DIRECTION FOR LEDs */

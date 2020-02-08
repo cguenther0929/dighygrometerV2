@@ -18,7 +18,8 @@ bool EspCommCheck ( void ) {
     ResetRxBuffer();
     
     // PrintUARTString(ESP_AT_COMM_CHECK,LF);
-    PrintUARTString("AT\r\n",0);        //TODO this doesn't appear to work
+    // PrintUARTString("AT\r\n",0);        //TODO this doesn't appear to work
+    PrintUARTString("AT",LF);        //TODO this doesn't appear to work
     tick20msDelay(10);    
     
     PrintUARTBuffer();                  // TODO for debugging only
@@ -33,20 +34,19 @@ bool EspCommCheck ( void ) {
     return true;
 }
 
-
 bool EspApOrClientMode (const char * mode) {
     char temp_string[64]; 
     
     ResetRxBuffer();
     
-    strcat(temp_string, ESP_AP_OR_CLIENT_BASE_CMD);
-    strcat(temp_string, mode);
+    strcat(temp_string, ESP_AP_OR_CLIENT_BASE_CMD);     //AT+CWMODE=
+    strcat(temp_string, mode);                          // ex. AT+CWMODE=1
 
     PrintUARTString(temp_string,LF);
     tick20msDelay(2);
     
-    PrintUARTBuffer();                  //TODO for debugging only
-    tick20msDelay(100);     //TODO we can remove this line
+    PrintUARTBuffer();                  // TODO for debugging only
+    tick20msDelay(100);                 // TODO we can remove this line
     
     ResetRxBuffer();
 
@@ -101,16 +101,24 @@ void GetAssignedIpAddress ( void ) {
 
     temp_ptr = & wifi.assigned_ip_address[0];
 
+    DispRefresh();
+    DispWtLnOne("IP ADDRESS");
+    tick20msDelay(50);
+    
+    
     ResetRxBuffer();
 
     PrintUARTString("AT+CIFSR",LF);         // Command to ESP8266 for retreiving IP address
+    tick20msDelay(5);
 
+    // TODO the following needs work since the MAC address is printed, too!  
     for(i=0; i < uart.data_count; i++) {
         if((uart.rxbuf[uart.old_byte + i] != 0x0A) && (uart.rxbuf[uart.old_byte + i] != 0x0D))   // Do not collect line feed characters
             *temp_ptr = uart.rxbuf[uart.old_byte + i];
     }
 
     PrintUARTBuffer();                  //TODO for debugging only
+    tick20msDelay(50);
     ResetRxBuffer();
 
 }
@@ -147,13 +155,14 @@ bool JoinNetwork (const char * ssid, const char * password) {
 
     ResetRxBuffer();
     
-    strcat(temp_string, ESP_JOIN_NETWORK_BASE_CMD);
-    strcat(temp_string, ssid);
+    strcat(temp_string, ESP_JOIN_NETWORK_BASE_CMD);         // "AT+CWJAP="
+    strcat(temp_string, ssid);                              
     strcat(temp_string, ",");
     strcat(temp_string, password);
     
     
     PrintUARTString(temp_string,LF);
+    tick20msDelay(5);
     PrintUARTBuffer();                  //TODO for debugging only
     tick20msDelay(50);
     

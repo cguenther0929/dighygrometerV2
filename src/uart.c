@@ -89,8 +89,11 @@ void PrintUARTBuffer ( void ){
         }
         
         if(char_count >= 32) {
-            DispWtLnOne("OVERFLOW 0001");
-            break;
+            char_count = 0;
+            tick100msDelay(8);
+            DispRefresh();
+            // DispWtLnOne("OVERFLOW 0001");        //TODO remove these lines? 
+            // break;
         }
 
     }
@@ -107,10 +110,8 @@ void PrintUARTString (const char * y, uint8_t action ) {
 
     /* CHECK TO SEE IF THE USER WISHES TO CREATE A NEW LINE */
     if(action == LF) {
-        // TXREG1 = 0x0d;       //Return the cursor
         TXREG1 = '\r';      //Return the cursor
         TXWait();
-        // TXREG1 = 0x0a;      //Put us on a new line -- must be in this order...
         TXREG1 = '\n';          //Put us on a new line -- must be in this order...
         TXWait();
     }

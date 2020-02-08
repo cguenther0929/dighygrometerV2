@@ -25,8 +25,8 @@ void SPI1Init( void ){
     /* CONFIGURE SSP1CON1 p282 */
     CKP1 = 0;                               // Idle clock app_state is low (default value)
     // SSPCON1bits.SSPM = 0x0;              // 0b0000 SPI Master mode: clock = FOSC/4
-    SSPCON1bits.SSPM = 0x1;                 // 0b0001 SPI Master mode: clock = FOSC/16
-    // SSPCON1bits.SSPM = 0x2;              // 0b0010 SPI Master mode: clock = FOSC/64
+    // SSPCON1bits.SSPM = 0x1;              // 0b0001 SPI Master mode: clock = FOSC/16
+    SSPCON1bits.SSPM = 0x2;                 // 0b0010 SPI Master mode: clock = FOSC/64
     // SSPCON1bits.SSPM = 0x3;              // 0b0011 Master mode: clock = TMR2 output/2
     // SSPCON1bits.SSPM = 0xA;              // 0b1001 SPI Master mode: clock = FOSC/8
 
@@ -42,8 +42,8 @@ void SPI2Init( void ){
     /* CONFIGURE SSP2CON1 */
     CKP2 = 0;                            // Idle clock app_state is low (default value)
     // SSP2CON1bits.SSPM = 0x0;             // 0b0000 SPI Master mode: clock = FOSC/4
-    SSP2CON1bits.SSPM = 0x1;          // 0b0001 SPI Master mode: clock = FOSC/16
-    // SSP2CON1bits.SSPM = 0x2;          // 0b0010 SPI Master mode: clock = FOSC/64
+    // SSP2CON1bits.SSPM = 0x1;          // 0b0001 SPI Master mode: clock = FOSC/16
+    SSP2CON1bits.SSPM = 0x2;          // 0b0010 SPI Master mode: clock = FOSC/64
     // SSP2CON1bits.SSPM = 0x3;          // 0b0011 Master mode: clock = TMR2 output/2
     // SSP2CON1bits.SSPM = 0xA;          // 0b1001 SPI Master mode: clock = FOSC/8
 
