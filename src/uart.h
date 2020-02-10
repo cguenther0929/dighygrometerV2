@@ -30,9 +30,9 @@
 #include "main.h"
 
 /* Message Buffer Sizes */
-#define MAX_BUFFER              20             				// Define max receive buffer size. 
-#define MAX_ELEMENTS            MAX_BUFFER + 1  			// Number of elements that can be stored in buffer
-#define UART_TMOUT_MS           30					// Value is in ms.  As a reference, a 255bit message requires ~26ms @ 9600			
+#define MAX_BUFFER              128	                        // Define max receive buffer size. 
+#define MAX_ELEMENTS            MAX_BUFFER + 1  		// Number of elements that can be stored in buffer
+#define UART_TMOUT_MS           30				// Value is in ms.  As a reference, a 255bit message requires ~26ms @ 9600			
 #define TX_TMOUT_CNTS      	(uint16_t)(OSC_DIV4 * (UART_TMOUT_MS / 1000.0)) 	// FOSC/4 Counts.  Therefore counts = FOSC/4 * Timeout Value.  
 
 /* UART Baud Rate Setup */         
@@ -50,11 +50,12 @@
 #endif
 
 extern struct UARTMembers {
-        uint8_t rxchar;                   //Support this so that a PC can calibrate the unit
-        uint8_t rxbuf[MAX_BUFFER];
-        uint8_t new_byte;
-        uint8_t old_byte;
-        uint8_t data_count;
+        uint8_t         rxchar;                         // Most recent received character from interrupt
+        char            rxbuf[MAX_BUFFER];
+        char            txbuf[MAX_BUFFER];              
+        uint8_t         new_byte;
+        uint8_t         old_byte;
+        uint8_t         data_count;
 }UARTMembers;
 
 /* CONTROL CHARACTERS */
@@ -93,14 +94,16 @@ void SetUpUART( void );
 void PrintUARTString (const char *y, uint8_t action );
 
 /*
- * Function: void PrintUARTBuffer ( void )
+ * Function: void PrintUartRxBuf ( void )
  * --------------------
  * Print the contents of the UART 
  * RX buffer to the display
  *
  * returns: Nothing 
  */
-void PrintUARTBuffer ( void );
+void PrintUartRxBuf ( void );
+
+void PrintUartTxBuf ( void );           //TODO comment
 
 /*
  * Function: void ResetRxBuffer( void )
@@ -111,6 +114,16 @@ void PrintUARTBuffer ( void );
  * returns: Nothing 
  */
 void ResetRxBuffer( void );
+
+/*
+ * Function: void ResetTxBuffer( void )
+ * --------------------
+ * Reset UART transmit buffer by
+ * way of the built in memset function 
+ *
+ * returns: Nothing 
+ */
+void ResetTxBuffer( void );
 
 // /********************************************************
 // *FUNCTION: int IntegerInput(const char * y, uint8_t action)

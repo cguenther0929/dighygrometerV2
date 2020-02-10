@@ -30,17 +30,15 @@ extern struct WifiInformation         //Structure to pass information that is sh
 
 
 
-#define LF			            1
-#define CR			            2
-
 /*
  * Base64 coded format of clinton.debug@gmail.com
  * Use base64encode.org to create
  * Length of string is 32 characters, but total length
  * is 34 characters when accounting for line feed
  */
-#define LOGIN_EMAIL_BASE64                  "Y2xpbnRvbi5kZWJ1Z0BnbWFpbC5jb20="
-#define LOGIN_USERNAME_LENGTH               "34"
+// #define LOGIN_EMAIL_BASE64                  "Y2xpbnRvbi5kZWJ1Z0BnbWFpbC5jb20="
+#define LOGIN_EMAIL_BASE64                  "Y2xpbnRvbi5ndWVudGhlckBnbWFpbC5jb20="  // clinton.guenther@gmail.com
+#define LOGIN_USERNAME_LENGTH               "38"                                    //+2 for \n\r characters
 
 /*
  * Base64 coded format of email password
@@ -48,8 +46,9 @@ extern struct WifiInformation         //Structure to pass information that is sh
  * Length of string is 20 characters, but total length
  * is 22 characters when accounting for line feed
  */
-#define LOGIN_PASSWORD_BASE64               "TUdINTY3JiooNDI0MjYy"
-#define LOGIN_PASSWORD_LENGTH               "22"
+// #define LOGIN_PASSWORD_BASE64               "TUdINTY3JiooNDI0MjYy"
+#define LOGIN_PASSWORD_BASE64               "YzRRUVh3Rmt6MDdY"                      // Password for smtp2go
+#define LOGIN_PASSWORD_LENGTH               "18"                                    //+2 for \n\r characters
 
 #define ESP_AT_COMM_CHECK                   "AT"
 
@@ -57,7 +56,7 @@ extern struct WifiInformation         //Structure to pass information that is sh
 #define EMAIL_GMAIL_HOST_DOMAIN             "\"smtp.gmail.com\""
 #define EMAIL_GMAIL_HOST_PORT               "465"
 
-#define EMAIL_SMTP2GO_HOST_DOMAIN           "\"not.defined\""
+#define EMAIL_SMTP2GO_HOST_DOMAIN           "\"mail.smtp2go.com\""
 #define EMAIL_SMTP2GO_HOST_PORT             "2525"
 
 #define ESP_JOIN_NETWORK_BASE_CMD           "AT+CWJAP="
@@ -122,7 +121,7 @@ bool JoinNetwork (const char * ssid, const char * password);
 
 bool SendEmail( void ); //TODO comment
 
-void GetAssignedIpAddress ( void );
+bool GetAssignedIpAddress ( void );
 
 uint8_t GetLengthIpAddress ( void ); //Get the length of the ip address.  192.168.0.1 = 11
 

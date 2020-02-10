@@ -66,34 +66,58 @@ void PrintChar( uint8_t inchar, uint8_t action ) {
     }
 }
 
-void PrintUARTBuffer ( void ){
+void PrintUartTxBuf ( void ){
     uint8_t char_count = 0;
+    char * temp_ptr;
+
+    temp_ptr = &uart.txbuf[0];
 
     DispRefresh();
-    while(uart.data_count > 0 ){
-        if(uart.rxbuf[uart.old_byte] != 0x0a || uart.rxbuf[uart.old_byte] != 0x0d) {
-
-            DispWriteChar(uart.rxbuf[uart.old_byte]);
-            (uart.old_byte >= MAX_BUFFER) ? (uart.old_byte = 0):(uart.old_byte++);
-            uart.data_count--;
+    
+    while(*temp_ptr != '\0'){
+        
+        if((*temp_ptr != 0x0a) && (*temp_ptr != 0x0d)) {
+            DispWriteChar(*temp_ptr);
+            temp_ptr++;                           //Increment the pointer memory address
             char_count++;
         }
         else {
-            (uart.old_byte >= MAX_BUFFER) ? (uart.old_byte = 0):(uart.old_byte++);
-            uart.data_count--;
+            temp_ptr++;
+        }
+
+        if(char_count >= 16) {
+            tick100msDelay(10);
+            DispRefresh( );
+            char_count = 0;
+            // DispLineTwo ();
+        }
+
+    }
+
+}
+
+void PrintUartRxBuf ( void ){
+    uint8_t char_count = 0;
+    char * temp_ptr;
+    temp_ptr = &uart.rxbuf[0];
+
+    DispRefresh();
+    
+    while(*temp_ptr != '\0') {
+        
+        if((*temp_ptr != 0x0a) && (*temp_ptr != 0x0d)) {
+            DispWriteChar(*temp_ptr);
+            temp_ptr++;                           //Increment the pointer memory address
             char_count++;
         }
-        
-        if(char_count >= 16) {
-            DispLineTwo ();
+        else {
+            temp_ptr++;
         }
-        
-        if(char_count >= 32) {
+
+        if(char_count >= 16) {
+            tick100msDelay(15);
+            DispRefresh( );
             char_count = 0;
-            tick100msDelay(8);
-            DispRefresh();
-            // DispWtLnOne("OVERFLOW 0001");        //TODO remove these lines? 
-            // break;
         }
 
     }
@@ -155,12 +179,16 @@ void TXWait( void ) {
     return;
 }
 
+void ResetTxBuffer( void ) {
+    memset(uart.txbuf,'\0',MAX_ELEMENTS);                           // Null out the buffer
+}
+
 void ResetRxBuffer( void ) {
-    RC1IE = 0;                                                      //Turn off UART interrupts while resetting buffer
-    uart.old_byte = uart.new_byte = 0;                              //Reset the pointers
-    uart.data_count = 0;                                            //Reset the data counter
-    memset(uart.rxbuf,'\0',MAX_ELEMENTS);                           //Null out the buffer
-    RC1IE = 1;                                                      //Turn UART interrupts back on
+    RC1IE = 0;                                                      // Turn off UART interrupts while resetting buffer
+    uart.old_byte = uart.new_byte = 0;                              // Reset the pointers
+    uart.data_count = 0;                                            // Reset the data counter
+    memset(uart.rxbuf,'\0',MAX_ELEMENTS);                           // Null out the buffer
+    RC1IE = 1;                                                      // Turn UART interrupts back on
 }
 
 void PrintUnsignedDecimal (uint16_t number, uint8_t action) {

@@ -246,32 +246,43 @@ void EvaluateState( void ) {
             DispWtLnOne("Net Connect");
             tick20msDelay(50);
 
-            EspCommCheck();
+            // EspCommCheck();
             
-            // EspApOrClientMode(ESP_CLIENT_MODE);
+            // DispRefresh();
+            // DispWtLnOne("Set Client Mode");
+            // tick100msDelay(10);
+            // EspApOrClientMode(ESP_CLIENT_MODE);                 //TODO according to the example, this should be "AT+CWMODE=3"  
+            // EspApOrClientMode(ESP_AP_AND_CLIENT_MODE);                 //TODO this matches the example //// Can't seem to get IP when this option set 
             // tick20msDelay(1);
 
-            // DisconnectWifiConnection( );        //Kill any existing connections first
+            // DisconnectWifiConnection( );                        // Send command "AT+CWQAP" to disconnect from any AP
             // tick20msDelay(5);
-
+            
+            // DispRefresh();
+            // DispWtLnOne("Reset Module");
+            // tick100msDelay(10);
             // ResetEsp( );
             // tick100msDelay(50);
 
+            DispRefresh();
+            DispWtLnOne("Join Network");
+            tick100msDelay(10);
             JoinNetwork(WIFI_ROUTER_SSID, WIFI_ROUTER_PASSWORD);
-            tick100msDelay(50);
             
-            // SetEspCipmuxMode(ESP_CIPMUX_SINGLE_CONNECTION);
-            // SetEspCipmuxMode(ESP_CIPMUX_MULTIPLE_CONNECTION);
-            // tick20msDelay(5);
+            GetAssignedIpAddress( );    
+            GetLengthIpAddress( );
+            
+            // SetEspCipmuxMode(ESP_CIPMUX_SINGLE_CONNECTION);         // Mode = 0 for single connection
+            SetEspCipmuxMode(ESP_CIPMUX_MULTIPLE_CONNECTION);       // Mode = 1 for multiple connections
 
             // EspServerMode (ACTION_OPEN_SERVER_SOCKET,"80");
             // tick20msDelay(5);
-
-            GetAssignedIpAddress( );    
+            
+            SendEmail( );
 
             GetNewDisplayRefreshTime( );
 
-            app_state = STATE_IDLE;
+            app_state = UPDATE_DISPLAY;
             break;
 
         default:
@@ -469,8 +480,11 @@ void SetUp(void)
     DISP_ENABLE = DISPLAY_OFF;
 
     /* WiFi Reset and Enable Lines High */
-    WIFI_RESET  = 1;
+    WIFI_RESET  = 0;
     WIFI_ENABLE = 1;
+    for(i=0; i<5000; i++);
+    WIFI_RESET  = 1;
+
 
     /* SETUP INTERRUPTS */
     Init_Interrupts();
