@@ -229,7 +229,7 @@ bool JoinNetwork (const char * ssid, const char * password) {
     // DispRefresh();
     
     PrintUARTString(uart.txbuf,LF);             // Send command to WiFi module
-    tick100msDelay(60);                         // This delay is imperative
+    tick100msDelay(80);                         // This delay is imperative
     // PrintUartRxBuf();                          // TODO for debugging only
     // tick100msDelay(10);
     

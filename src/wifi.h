@@ -53,7 +53,7 @@ extern struct WifiInformation         //Structure to pass information that is sh
 #define ESP_AT_COMM_CHECK                   "AT"
 
 #define ESP_MAKE_TCP_CONN_BASE_CMD          "AT+CIPSTART=0"
-#define EMAIL_GMAIL_HOST_DOMAIN             "\"smtp.gmail.com\""
+#define EMAIL_GMAIL_HOST_DOMAIN "\"smtp.gmail.com\""
 #define EMAIL_GMAIL_HOST_PORT               "465"
 
 #define EMAIL_SMTP2GO_HOST_DOMAIN           "\"mail.smtp2go.com\""

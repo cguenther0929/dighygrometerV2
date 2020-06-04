@@ -182,15 +182,15 @@ void EvaluateState( void ) {
         
             SelectSensor(SELECT_SENSOR_1);
             tick20msDelay(1);
-            // temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_HUM_HOLD_MASTER);       //TODO put this line in
-            temp_data = 1200;   //TODO take this line out
+            temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_HUM_HOLD_MASTER);          // TODO put this line in
+            // temp_data = 1200;   //TODO take this line out
             gblinfo.rh_value_1 = (float)((125.0 * temp_data / 65536) - 6 + gblinfo.rh_offset_1);
 
-            // temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_TMP_PREV_RH_MEAS);      //TODO put this line in
-            temp_data = 1200;       //TODO take this line out
-            gblinfo.temp_value_1 = (uint8_t)((temp_data / 207.1952) - 52.24);             // Units in deg C
+            temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_TMP_PREV_RH_MEAS);         // TODO put this line in
+            // temp_data = 1200;       //TODO take this line out
+            gblinfo.temp_value_1 = (uint8_t)((temp_data / 207.1952) - 52.24);                   // Units in deg C
 
-            SelectSensor(SELECT_SENSOR_2);
+            // SelectSensor(SELECT_SENSOR_2);
             tick20msDelay(1);
             temp_data = 1200;       //TODO remove
             // temp_data = I2CRead_16b(SI7020_BASE_ADDRESS, SI7020_MEAS_HUM_HOLD_MASTER);   //TODO put this line in
@@ -508,6 +508,9 @@ void SetUp(void)
     /* Enable the UART */
     SetUpUART();
     EnableUart1Interrupts( UART_RX_HIGH_PRIORITY );
+
+    /* Enable I2C Interface */
+    I2Cinit( );
     
     
     /* TIMER FOR APPLICATION INTERRUPTS */

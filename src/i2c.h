@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "main.h"
+#include "config.h"
 
 /******************************************************************************
     This note contemplates master mode only. See p.311 of the datasheet
@@ -32,15 +33,18 @@
 
 
 /* MASTER MODE CLOCK RATE */
-#define Oscillator      8000000                           //Device oscillator value
-#define I2CCLOCK        100000                            //I2C Clock Value -- Need to make sure this value isn't too high for given FOSC value 
-// #define BaudValue       ((Oscillator/(4.0*I2CCLOCK)) - 1.0)     //Value for SSPADD register (master-mode only)          
-#define BaudValue       10     //Value for SSPADD register (master-mode only)          
-#define i2cdelay        10
+#define Oscillator      32000000                                            // Device oscillator value
+#define I2CCLOCK        100000                                               // I2C Clock Value -- Need to make sure this value isn't too high for given FOSC value 
+// #define BaudValue       (uint8_t)((Oscillator/(4.0*I2CCLOCK)) - 1.0)        // Value for SSPADD register (master-mode only)          
+#define BaudValue       126              // Lower seven bits of SSPxADD, so number shall be <= 127
+// #define BaudValue       127
+// #define BaudValue    10     //Value for SSPADD register (master-mode only)          
+#define i2cdelay        50
 
-// #if ((BaudValue >> 8) & 0X01)
-//     #warning "Baud Value has value in bit 8"
-// #endif
+/* Timeout Ticks */
+#define I2C_TIMEOUT_MS      0.5
+// #define I2C_TIMEOUT_TICKS   (uint16_t)(OSC_DIV4*(I2C_TIMEOUT_MS/1000.0))
+#define I2C_TIMEOUT_TICKS   320000      //TODO need to remove this line. Timeout of about 40ms
 
 /* DEFINE SPECIAL SFR NAMES FOR I2CxSTAT REGISTER */
 //SSP1CON2 bits   TODO can likely finish much of the following.  
@@ -59,11 +63,16 @@
 #define I2CStopDetect   SSP1STATbits.P          //Intelligent mnemonic indicating a stop condition was detected
 #define I2CStartDetect  SSP1STATbits.S          //Intelligent mnemonic indicating a start condition was detected
 
-#define I2C_Active      (RW2 + SEN2 + RSEN2 + RCEN2 + RCEN2 + ACKEN2) //<< 4) | (RSEN2 << 3) | (RCEN2 << 2) | (RCEN2 << 1) | ACKEN2)) //Indicates when I2C module is active p292 of datasheet 
+/*
+ * Indicates when I2C module is active, p292 of datasheet 
+ */
+#define I2C_Active      (RW2 + SEN2 + RSEN2 + RCEN2 + RCEN2 + ACKEN2) 
 
 /* I2C BITS AND POLARITY */
 #define ACK             0                       // An I2C ACK is active low
 #define NACK            1                       // An I2C NACK is active high
+
+
 
 
 /********************************************************

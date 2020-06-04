@@ -18,9 +18,10 @@ void I2Cinit( void ) {
     SSPOV2 = 0;                 // Receiver overflow indicator bit. Must be cleared in SW.
 	SSP2CON1bits.SSPM = 8;      // I2C Master Mode. CLOCK RATE = FOSC/(4*(SSPADD+1)) p.293
 	SSPEN2 = 1;	                // Enable the I2C module and configure the SDA and SCL Pins as serial port pins
+    RCEN2 = 0;                  // Start with the receiver disabled
     
     /* LOAD THE BAUD RATE GENERATOR WITH THE APPROPIATE VALUE */
-	SSPADD = BaudValue;      //In master-mode, this is the BAUD rate reload value. (p.298) 
+	SSP2ADD = BaudValue;        // SSP1ADD or SSP2ADD p326.  In master mode, lower seven bits used for Baud rate
 }
 
 
@@ -84,9 +85,9 @@ void I2CWrite_8b(uint8_t baseaddress, uint8_t command, uint8_t data) {
     tempaddr = (uint8_t)((baseaddress << 1) | I2C_WRITE_BIT);
 
     SSP2IF = 0;
-    SSP1BUF = tempaddr;
+    SSP2BUF = tempaddr;
 
-    if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
+    if (WCOL2){                                                // Verify no collision after each write to SSP2BUF (p.317)
         WCOL2=0;
         DispWtLnOne("I2C ERR 1002");
         DispWtLnTwo("INFINITE LOOP");
@@ -111,9 +112,9 @@ void I2CWrite_8b(uint8_t baseaddress, uint8_t command, uint8_t data) {
      * sensor
      */    
     SSP2IF = 0;
-    SSP1BUF = command;			                                    // Transmit command to sensor 
+    SSP2BUF = command;			                                    // Transmit command to sensor 
     
-    if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
+    if (WCOL2){                                                // Verify no collision after each write to SSP2BUF (p.317)
         WCOL2=0;
         DispWtLnOne("I2C ERR 1004");
         DispWtLnTwo("INFINITE LOOP");
@@ -138,9 +139,9 @@ void I2CWrite_8b(uint8_t baseaddress, uint8_t command, uint8_t data) {
      * byte to sensor
      */    
     SSP2IF = 0;
-    SSP1BUF = data;			                                    // Transmit command to sensor 
+    SSP2BUF = data;			                                    // Transmit command to sensor 
     
-    if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
+    if (WCOL2){                                                // Verify no collision after each write to SSP2BUF (p.317)
         WCOL2=0;
         DispWtLnOne("I2C ERR 1006");
         DispWtLnTwo("INFINITE LOOP");
@@ -241,9 +242,9 @@ uint8_t I2CRead_8b(uint8_t baseaddress, uint8_t command) {
     tempaddr = (uint8_t)((baseaddress << 1) | I2C_WRITE_BIT);		// LSB is Read/n_Write bit
     
     SSP2IF = 0;
-    SSP1BUF = tempaddr;			                                    // Sending address + write
+    SSP2BUF = tempaddr;			                                    // Sending address + write
     
-    if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
+    if (WCOL2){                                                // Verify no collision after each write to SSP2BUF (p.317)
         WCOL2=0;
         DispWtLnOne("I2C ERR 2002");
         DispWtLnTwo("INFINITE LOOP");
@@ -268,9 +269,9 @@ uint8_t I2CRead_8b(uint8_t baseaddress, uint8_t command) {
      * command to the sensor
      */    
     SSP2IF = 0;
-    SSP1BUF = command;			                                    // Transmit command to sensor 
+    SSP2BUF = command;			                                    // Transmit command to sensor 
     
-    if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
+    if (WCOL2){                                                // Verify no collision after each write to SSP2BUF (p.317)
         WCOL2=0;
         DispWtLnOne("I2C ERR 2004");
         DispWtLnTwo("INFINITE LOOP");
@@ -311,9 +312,9 @@ uint8_t I2CRead_8b(uint8_t baseaddress, uint8_t command) {
     tempaddr = (uint8_t)((baseaddress << 1) | I2C_READ_BIT);		
     
     SSP2IF = 0;
-    SSP1BUF = tempaddr;			                                    // Sending address + read
+    SSP2BUF = tempaddr;			                                    // Sending address + read
     
-    if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
+    if (WCOL2){                                                // Verify no collision after each write to SSP2BUF (p.317)
         WCOL2=0;
         DispWtLnOne("I2C ERR 2007");
         DispWtLnTwo("INFINITE LOOP");
@@ -342,7 +343,7 @@ uint8_t I2CRead_8b(uint8_t baseaddress, uint8_t command) {
     RCEN2 = 1;                          // Enable I2C Receiver
     while(SSP2IF == 0);                 // When all eight bits received RCEN cleared in HW, and BF and SSP2IF automatically set
     
-    data_byte = SSP1BUF;                  // Should automatically clear BF flag (defined by I2CBF)
+    data_byte = SSP2BUF;                  // Should automatically clear BF flag (defined by I2CBF)
     
     /*
      * Data received, but 
@@ -416,24 +417,46 @@ uint8_t I2CRead_8b(uint8_t baseaddress, uint8_t command) {
 
 uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
     
-    uint8_t tempaddr    = 0x00;		
-    uint8_t ms_byte     = 0x00;
-    uint8_t ls_byte     = 0x00;
+    uint8_t     tempaddr            = 0;		
+    uint8_t     ms_byte             = 0;
+    uint8_t     ls_byte             = 0;
+    uint32_t    timeout_ticks       = 0;
+    bool        i2c_timeout_error   = false;
     
     WCOL2 = 0;                                                      // Write collision detect bit.  Must be cleared in SW.
     SSPOV2 = 0;                                                     // Receiver overflow indicator bit. Must be cleared in SW.
-    while(I2C_Active >= 1);                                         // Checking if R_nW | ACKEN | RCEN | PEN | RSEN | SEN is set
+
+    timeout_ticks = 0;
+    while(I2C_Active >= 1 && timeout_ticks < I2C_TIMEOUT_TICKS) {                                         // Checking if R_nW | ACKEN | RCEN | PEN | RSEN | SEN is set
+        timeout_ticks++;
+        timeout_ticks == I2C_TIMEOUT_TICKS ? (i2c_timeout_error = true):(i2c_timeout_error = false);
+    }
+
+    if(i2c_timeout_error){
+        DispWtLnOne("I2C TMOUT 435");
+        while(true);
+    }    
     
     /*
      * Generate start condition 
      */ 
     SSP2IF = 0;
     SEN2 = 1; 			                                            // Generate the start condition
-    while(SSP2IF == 0);                                             // Wait for start condition to generate an interrupt
+    
+    timeout_ticks = 0;
+    while(SSP2IF == 0 && timeout_ticks < I2C_TIMEOUT_TICKS) {       // Wait for start condition to generate an interrupt
+        timeout_ticks++;
+        timeout_ticks == I2C_TIMEOUT_TICKS ? (i2c_timeout_error = true):(i2c_timeout_error = false);
+    }                                             
+    
+    if(i2c_timeout_error){
+        DispWtLnOne("I2C TMOUT 454");
+        while(true);
+    }
     
     if (WCOL2){                                                // Bus collision detected (p.320)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 0001");
+        DispWtLnOne("I2C ERR 458");
         DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
@@ -445,16 +468,27 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
     tempaddr = (uint8_t)((baseaddress << 1) | I2C_WRITE_BIT);		// LSB is Read/n_Write bit
     
     SSP2IF = 0;
-    SSP1BUF = tempaddr;			                                    // Sending address + write
+    SSP2BUF = tempaddr;			                                    // Sending address + write
     
-    if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
+    if (WCOL2){                                                // Verify no collision after each write to SSP2BUF (p.317)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 0002");
+        DispWtLnOne("I2C ERR 474");
         DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
     
-    while(!SSP2IF);		                    // Interrupt shall be created on 9th clock cycle after ACK/NACK bit received by the master
+    timeout_ticks = 0;
+    while(!SSP2IF && timeout_ticks < I2C_TIMEOUT_TICKS) {		                    // Interrupt shall be created on 9th clock cycle after ACK/NACK bit received by the master
+        timeout_ticks++;
+        timeout_ticks == I2C_TIMEOUT_TICKS ? (i2c_timeout_error = true):(i2c_timeout_error = false);
+    }
+
+    if(i2c_timeout_error){
+        DispWtLnOne("I2C TMOUT 486");
+        while(true);
+    }
+    SSPOV2 = 0;                                                     
+    WCOL2=0;
 
     /*
      * Process ACK vs NACK
@@ -462,7 +496,7 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
      * command register
      */    
     if(ACKSTAT2 == NACK){     //Slave did not acknowledge transmission of base address
-        DispWtLnOne("I2C ERR 0003");
+        DispWtLnOne("I2C ERR 496");
         DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
@@ -472,30 +506,53 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
      * sensor
      */    
     SSP2IF = 0;
-    SSP1BUF = command;			                                    // Transmit command to sensor 
+    SSP2BUF = command;			                                    // Transmit command to sensor 
     
-    if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
+    if (WCOL2){                                                // Verify no collision after each write to SSP2BUF (p.317)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 0004");
+        DispWtLnOne("I2C ERR 510");
         DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
 
-    while(!SSP2IF);		                    // Interrupt shall be created on 9th clock cycle after ACK/NACK bit received by the master
+    timeout_ticks = 0;
+    while(SSP2IF == 0 && timeout_ticks < I2C_TIMEOUT_TICKS) {		                    // Interrupt shall be created on 9th clock cycle after ACK/NACK bit received by the master
+        timeout_ticks++;
+        timeout_ticks == I2C_TIMEOUT_TICKS ? (i2c_timeout_error = true):(i2c_timeout_error = false);
+    }
 
+    if(i2c_timeout_error){
+        DispWtLnOne("I2C TMOUT 516");
+        while(true);
+    }
+
+    SSPOV2 = 0;                                                     
+    WCOL2=0;
+    
     /*
      * Create the repeated start condition
      */
     SSP2IF = 0;
     RSEN2 = 1; 			                                            // Generate the start condition
-    while(SSP2IF == 0);                                             // Wait for repeated start condition to generate an interrupt
+    timeout_ticks = 0;
+    while(SSP2IF == 0 && timeout_ticks < I2C_TIMEOUT_TICKS) {       // Wait for start condition to generate an interrupt
+        timeout_ticks++;
+        timeout_ticks == I2C_TIMEOUT_TICKS ? (i2c_timeout_error = true):(i2c_timeout_error = false);
+    }
+    if(i2c_timeout_error){
+        DispWtLnOne("I2C TMOUT 537");
+        tick100msDelay(3);
+    }  
     
     if (WCOL2){                                                // Bus collision detected (p.320)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 0005");
+        DispWtLnOne("I2C ERR 543");
         DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
+    
+    SSPOV2 = 0;                                                     
+    WCOL2=0;
     
     /* 
      * Again, send slave address
@@ -504,16 +561,28 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
     tempaddr = (uint8_t)((baseaddress << 1) | I2C_READ_BIT);		
     
     SSP2IF = 0;
-    SSP1BUF = tempaddr;			                                    // Sending address + read
+    SSP2BUF = tempaddr;			                                    // Sending address + read
     
-    if (WCOL2){                                                // Verify no collision after each write to SSP1BUF (p.317)
+    if (WCOL2){                                                // Verify no collision after each write to SSP2BUF (p.317)
         WCOL2=0;
-        DispWtLnOne("I2C ERR 0006");
+        DispWtLnOne("I2C ERR 559");
         DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
 
-    while(!SSP2IF);		                    // Interrupt shall be created on 9th clock cycle after ACK/NACK bit received by the master
+    timeout_ticks = 0;
+    while(!SSP2IF && timeout_ticks < I2C_TIMEOUT_TICKS) {		                    // Interrupt shall be created on 9th clock cycle after ACK/NACK bit received by the master
+        timeout_ticks++;
+        timeout_ticks == I2C_TIMEOUT_TICKS ? (i2c_timeout_error = true):(i2c_timeout_error = false);
+    }
+
+    if(i2c_timeout_error){
+        DispWtLnOne("I2C TMOUT 571");
+        while(true);
+    }
+    
+    SSPOV2 = 0;                                                     
+    WCOL2=0;
     
     /*
      * Process ACK vs NACK
@@ -521,7 +590,7 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
      * command register
      */    
     if(ACKSTAT2 == NACK){                   // Slave did not acknowledge transmission of base address
-        DispWtLnOne("I2C ERR 0007");
+        DispWtLnOne("I2C ERR 581");
         DispWtLnTwo("INFINITE LOOP");
         while(true);
     }
@@ -534,9 +603,21 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
     
     SSP2IF = 0;
     RCEN2 = 1;                          // Enable I2C Receiver
-    while(SSP2IF == 0);                 // When all eight bits received RCEN cleared in HW, and BF and SSP2IF automatically set
     
-    ms_byte = SSP1BUF;                  // Should automatically clear BF flag (defined by I2CBF)
+    timeout_ticks = 0;
+    while(SSP2IF == 0 && timeout_ticks < I2C_TIMEOUT_TICKS) {
+        timeout_ticks++;
+        timeout_ticks == I2C_TIMEOUT_TICKS ? (i2c_timeout_error = true):(i2c_timeout_error = false);
+    }
+    if(i2c_timeout_error){
+        DispWtLnOne("I2C TMOUT 593");
+        tick100msDelay(3);
+    } 
+    
+    ms_byte = SSP2BUF;                  // Should automatically clear BF flag (defined by I2CBF)
+    
+    SSPOV2 = 0;                                                     
+    WCOL2=0;
     
     /*
      * Data received, now set ACK
@@ -545,7 +626,17 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
     ACKDT2 = ACK;                       // Set the ACK/NACK bit to ACK
     SSP2IF = 0;
     ACKEN2 = 1;                         // Assert acknowledge on I2C bus for slave to see
-    while(SSP2IF == 0);
+    
+    timeout_ticks = 0;
+    while(SSP2IF == 0 && timeout_ticks < I2C_TIMEOUT_TICKS) {
+        timeout_ticks++;
+        timeout_ticks == I2C_TIMEOUT_TICKS ? (i2c_timeout_error = true):(i2c_timeout_error = false);
+    }
+
+    if(i2c_timeout_error){
+        DispWtLnOne("I2C TMOUT 614");
+        while(true);
+    }
     
     /* 
      * Read least significant
@@ -555,9 +646,22 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
     
     SSP2IF = 0;
     RCEN2 = 1;                          // Enable I2C Receiver
-    while(SSP2IF == 0);                 // When all eight bits received RCEN cleared in HW, and BF and SSP2IF automatically set
     
-    ls_byte = SSP1BUF;                  // Should automatically clear BF flag (defined by I2CBF)
+    timeout_ticks = 0;
+    while(SSP2IF == 0 && timeout_ticks < I2C_TIMEOUT_TICKS){                  // When all eight bits received RCEN cleared in HW, and BF and SSP2IF automatically set
+        timeout_ticks++;
+        timeout_ticks == I2C_TIMEOUT_TICKS ? (i2c_timeout_error = true):(i2c_timeout_error = false);
+    }
+    
+    if(i2c_timeout_error){
+        DispWtLnOne("I2C TMOUT 632");
+        while(true);
+    }
+    
+    ls_byte = SSP2BUF;                  // Should automatically clear BF flag (defined by I2CBF)
+    
+    SSPOV2 = 0;                                                     
+    WCOL2=0;
     
     /*
      * All of data now received,
@@ -566,7 +670,17 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
     ACKDT2 = NACK;                               // Send NACK to end transmittion -- SI7020 slave won't send CRC
     SSP2IF = 0;
     ACKEN2 = 1;                                  //Assert NACK to indicate slave we are finishing the transaction 
-    while(SSP2IF == 0);
+    
+    timeout_ticks = 0;
+    while(SSP2IF == 0 && timeout_ticks < I2C_TIMEOUT_TICKS) {
+        timeout_ticks++;
+        timeout_ticks == I2C_TIMEOUT_TICKS ? (i2c_timeout_error = true):(i2c_timeout_error = false);
+    }
+
+    if(i2c_timeout_error){
+        DispWtLnOne("I2C TMOUT 655");
+        while(true);
+    }
     
     /*
      * This I2C transaction is complete
@@ -574,7 +688,17 @@ uint16_t I2CRead_16b(uint8_t baseaddress, uint8_t command) {
      */
     SSP2IF = 0;
     RCEN2 = 1;					            // Create the STOP condition on the bus
-    while(SSP2IF == 0);                     // Wait for interrupt flag indicating stop condition transmitted to slave
+
+    timeout_ticks = 0;
+    while(SSP2IF == 0 && timeout_ticks < I2C_TIMEOUT_TICKS) {                     // Wait for interrupt flag indicating stop condition transmitted to slave
+        timeout_ticks++;
+        timeout_ticks == I2C_TIMEOUT_TICKS ? (i2c_timeout_error = true):(i2c_timeout_error = false);
+    }
+
+    if(i2c_timeout_error){
+        DispWtLnOne("I2C TMOUT 671s");
+        while(true);
+    }
     
     return ((ms_byte << 8) | (ls_byte));                      
 }    
